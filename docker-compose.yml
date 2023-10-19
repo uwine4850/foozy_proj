@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  go:
+    build:
+      dockerfile: "Dockerfile"
+    ports:
+      - "8000:8000"
+    restart: always
+    volumes:
+      - "./:/usr/src/app"
+
+  mysql:
+    container_name: "mysql"
+    image: mysql:5.7
+    restart: always
+    command: --port=3406 --max_connections=5
+    ports:
+      - "3406:3406"
+    environment:
+      MYSQL_ROOT_PASSWORD: 1111
+    volumes:
+      - "./mysql:/var/lib/mysql"
+      - "./schema:/schema"
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    restart: always
+    ports:
+      - "8090:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3406
+
+  node:
+    build:
+      dockerfile: "Dockerfile.node"
+    restart: always
+    ports:
+      - "3000:3000"
+    command: npm run start
+    volumes:
+      - "./src:/usr/app"

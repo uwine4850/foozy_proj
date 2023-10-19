@@ -1,0 +1,1 @@
+sudo docker compose run --rm node npm install
