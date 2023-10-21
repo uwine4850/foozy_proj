@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <title>{% block content %}{% endblock content %}</title>
+</head>
+<body>
+<header>
+    <div class="logo">FP</div>
+    <form class="search-bar">
+        <input type="text" placeholder="Search..">
+        <button><img src="/static/img/search_alt.svg"></button>
+    </form>
+    <button class="header-button">
+        <a><img src="/static/img/home.svg"> Home</a>
+    </button>
+    <button class="header-button">
+        <a><img src="/static/img/users.svg"> Subscriptions</a>
+    </button>
+    <div class="header-user-wrap">
+        <button class="header-user" id="header-user">
+            <div class="hu-username">renxob</div>
+            <div class="hu-avatar">
+                <img src="/static/img/temp/1.jpeg">
+            </div>
+            <span class="notification-count">1</span>
+        </button>
+        <span class="hu-menu hu-menu-hidden" id="hu-menu">
+            <a href="#"><span class="hu-menu-n-count">1</span>Notifications</a>
+            <a href="#">Messages</a>
+            <a href="#">New post</a>
+            <a href="#" class="hu-log-out">Log out</a>
+        </span>
+    </div>
+</header>
+{% block cont %}
+{% endblock cont %}
+<script type="text/javascript" src="/static/js/bundle.js"></script>
+</body>
+</html>

@@ -1,9 +1,9 @@
 const miniCss = require('mini-css-extract-plugin');
 module.exports = {
     // mode: "development",
-    entry: './static/js/index.js',
+    entry: './static/js/index.ts',
     output: {
-        filename: 'bundle.js',
+        filename: './static/js/bundle.js',
         path: '/usr/app'
     },
     module: {
@@ -16,13 +16,19 @@ module.exports = {
                 ],
             },
             {
-            test:/\.(s*)css$/,
-            use: [
-                miniCss.loader,
-                'css-loader',
-                'sass-loader',
-            ]
-        }]
+                test:/\.(s*)css$/,
+                use: [
+                    miniCss.loader,
+                    'css-loader',
+                    'sass-loader',
+                ]
+            },
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/
+            }
+        ]
     },
     plugins: [
         new miniCss({
@@ -30,6 +36,6 @@ module.exports = {
         }),
     ],
     resolve: {
-        extensions: ['', '.js', '.es6', '.jsx']
+        extensions: ['', '.ts', '.tsx', '.js', '.es6', '.jsx']
     }
 };
