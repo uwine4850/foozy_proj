@@ -61,7 +61,7 @@ header{
   height: 40px;
   width: fit-content;
   font-size: 18px;
-  @include linkButton($secondaryColor, rgba(255, 255, 255, 0.2), #645959)
+  @include linkButton($secondaryColor, rgba(255, 255, 255, 0.2))
 }
 
 

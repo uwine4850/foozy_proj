@@ -1,0 +1,168 @@
+@import "vars";
+
+.profile-wrap{
+  display: flex;
+}
+
+.profile-left-side{
+  display: flex;
+  flex-direction: column;
+  min-width: 500px;
+  max-width: 500px;
+  background-color: $primaryBgColor;
+  height: calc(100vh - 60px);
+  box-sizing: border-box;
+  padding: 10px;
+  overflow-y: scroll;
+}
+
+.profile-avatar{
+  min-width: 300px;
+  min-height: 300px;
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0 auto;
+  box-shadow: 0 4px 4px 1px rgba(0, 0, 0, 0.5);
+  img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.profile-username{
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+  margin-top: 15px;
+  display: flex;
+  font-size: 18px;
+  font-weight: 500;
+  padding: 3px 8px;
+  background-color: $lightGray;
+  width: fit-content;
+  border-radius: 3px;
+  .pu-name{
+    margin-right: 10px;
+  }
+}
+
+.profile-info-items{
+  margin-top: 10px;
+  display: flex;
+  font-size: 18px;
+  font-weight: 500;
+  flex-wrap: wrap;
+  .p-item{
+    margin-bottom: 10px;
+    display: flex;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+    margin-right: 10px;
+    .p-item-name{
+      border-radius: 3px 0 0 3px;
+      padding: 3px 8px;
+      background-color: $lightGray;
+      min-width: fit-content;
+    }
+    .p-item-value{
+      min-width: fit-content;
+      border-radius: 0 3px 3px 0;
+      padding: 3px 8px;
+      background-color: #3D3C3C;
+    }
+  }
+}
+
+.profile-buttons{
+  display: flex;
+  button{
+    font-size: 18px;
+    height: 40px;
+    transition: 2s;
+  }
+  .profile-button-subscribe{
+    @include linkButton(#862E2E, rgba(0, 0, 0, 0.2));
+    margin-right: 10px;
+  }
+  .profile-button-message{
+    @include linkButton(#2E4E6C, rgba(0, 0, 0, 0.2))
+  }
+}
+
+.profile-description{
+  margin-top: 10px;
+  box-sizing: border-box;
+  padding: 10px;
+  background-color: $lightGray;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+}
+
+.profile-content{
+  width: 100%;
+  padding: 20px;
+  .profile-content-menu{
+    width: 100%;
+    height: 50px;
+    border-radius: 3px;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+    display: flex;
+    @include lightMixin(rgba(0, 0, 0, 0.2), $primaryBgColor, 3px);
+    .pc-menu-filter{
+      margin: auto 0;
+      margin-left: 10px;
+      display: flex;
+      position: relative;
+      .pc-menu-filter-name{
+        font-size: 18px;
+        font-weight: 500;
+      }
+      .pc-menu-filter-value{
+        margin-left: 10px;
+        background-color: #454545;
+        padding: 2px 8px;
+        border-radius: 3px;
+        border: none;
+        outline: none;
+        font-size: 16px;
+        &:hover{
+          cursor: pointer;
+        }
+      }
+      .filter-items{
+        z-index: 100;
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        background-color: $primaryBgColor;
+        min-width: 150px;
+        right: 0;
+        top: 50px;
+        border-radius: 3px;
+        box-shadow: $blockShadow;
+        box-sizing: border-box;
+        padding: 15px 15px 0;
+        button{
+          background-color: transparent;
+          border: none;
+          outline: none;
+          margin-bottom: 10px;
+          font-size: 18px;
+          margin-right: auto;
+          font-weight: 500;
+          padding: 2px 5px;
+          width: 100%;
+          text-align: left;
+          border-radius: 3px;
+          transition: .1s;
+          &:hover{
+            cursor: pointer;
+            background-color: $secondaryColor;
+          }
+        }
+      }
+      .filter-items-hidden{
+        display: none;
+      }
+    }
+  }
+}
+

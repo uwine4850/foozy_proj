@@ -1,6 +1,7 @@
 $secondaryColor: #454545;
 $primaryBgColor: #323232;
 $darkBlue: #2E4E6C;
+$lightGray: #454545;
 $blockShadow: 0 0 10px 0 rgba(0, 0, 0, 0.54) inset, 0 4px 4px 0 rgba(0, 0, 0, 0.25);
 @mixin lightMixin($rgba, $bgColor, $borr) {
   background: linear-gradient(#{$bgColor}, #{$bgColor}) padding-box,
@@ -10,7 +11,7 @@ $blockShadow: 0 0 10px 0 rgba(0, 0, 0, 0.54) inset, 0 4px 4px 0 rgba(0, 0, 0, 0.
   border-top-width: 1px;
 };
 
-@mixin linkButton($bg_color, $lightRGBA, $hoverBG) {
+@mixin linkButton($bg_color, $lightRGBA) {
   box-sizing: border-box;
   background-color: #{$bg_color};
   border: none;
@@ -23,7 +24,6 @@ $blockShadow: 0 0 10px 0 rgba(0, 0, 0, 0.54) inset, 0 4px 4px 0 rgba(0, 0, 0, 0.
   transition: .1s;
   &:hover{
     cursor: pointer;
-    background-color: #{$hoverBG};
   }
   &:active{
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.54) inset, 0 0 0 0 rgba(0, 0, 0, 0.25);
