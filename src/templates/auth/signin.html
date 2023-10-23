@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block cont %}
+<form class="page-panel page-panel-auth">
+    <div class="page-panel-title">
+        Sign in
+    </div>
+    <div class="page-panel-input">
+        <label for="new-post-username">Username</label>
+        <input id="new-post-username" type="text" name="username">
+    </div>
+    <div class="page-panel-input">
+        <label for="new-post-password">Password</label>
+        <input id="new-post-password" type="password" name="password">
+    </div>
+    <button class="submit-btn">
+        <a>Sign in</a>
+    </button>
+    <a href="/register" class="switch-panel">Register</a>
+</form>
+{% endblock cont %}
