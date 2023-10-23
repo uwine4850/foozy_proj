@@ -12,3 +12,9 @@ runIfExist(document.getElementById("pc-menu-filter-value"), function (el){
         document.getElementById("filter-items").classList.toggle("filter-items-hidden");
    }
 });
+
+runIfExist(document.getElementById("pp-del-avatar-label"), function (el){
+   el.onclick = function (){
+       document.getElementById("pp-del-avatar").classList.toggle("page-panel-checkbox-true");
+   }
+});

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block cont %}
+<form class="page-panel">
+    <div class="page-panel-title">
+        Profile edit
+    </div>
+    <div class="page-panel-input">
+        <label for="profile-e-name">Name</label>
+        <input id="profile-e-name" type="text" name="name">
+    </div>
+    <div class="page-panel-textarea">
+        <label for="profile-e-description">Description</label>
+        <textarea rows="5" id="profile-e-description" name="description"></textarea>
+    </div>
+    <div class="page-panel-input">
+        <label for="profile-e-avatar">Avatar</label>
+        <input id="profile-e-avatar" type="file" name="avatar">
+    </div>
+    <button type="button" class="page-panel-input page-panel-checkbox pp-del-avatar" id="pp-del-avatar">
+        <label for="profile-e-del-avatar" id="pp-del-avatar-label">Delete avatar</label>
+        <input id="profile-e-del-avatar" type="checkbox" name="del_avatar">
+    </button>
+    <button class="create-btn">
+        <a>Save</a>
+    </button>
+</form>
+{% endblock cont %}

@@ -68,6 +68,35 @@
       box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
     }
   }
+  .page-panel-checkbox{
+    box-shadow: none;
+    label{
+      border-radius: 3px;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+    }
+    input{
+      width: fit-content;
+      display: none;
+    }
+  }
+  .page-panel-checkbox-true{
+    label{
+      background-color: $darkBlue;
+    }
+  }
+}
+
+.pp-del-avatar{
+  border: none;
+  outline: none;
+  background-color: transparent;
+  width: fit-content;
+}
+
+#pp-del-avatar-label{
+  &:hover{
+    cursor: pointer;
+  }
 }
 
 .create-btn{
