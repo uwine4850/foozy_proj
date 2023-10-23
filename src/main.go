@@ -30,6 +30,13 @@ func main() {
 			panic(err)
 		}
 	})
+	newRouter.Get("/new-post", func(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) {
+		manager.SetTemplatePath("src/templates/new_post.html")
+		err := manager.RenderTemplate(w, r)
+		if err != nil {
+			panic(err)
+		}
+	})
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
 	server := server2.NewServer(":8000", newRouter)
 	err = server.Start()

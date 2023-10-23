@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block cont %}
+<form class="page-panel">
+    <div class="page-panel-title">
+        New post
+    </div>
+    <div class="page-panel-input">
+        <label for="new-post-name">Name</label>
+        <input id="new-post-name" type="text" name="name">
+    </div>
+    <div class="page-panel-textarea">
+        <label for="new-post-description">Name</label>
+        <textarea rows="5" id="new-post-description" name="description"></textarea>
+    </div>
+    <div class="page-panel-input">
+        <label for="new-post-images">Images</label>
+        <input id="new-post-images" type="file" multiple name="images">
+    </div>
+    <div class="page-panel-input">
+        <label for="new-post-category1">Category 1</label>
+        <input id="new-post-category1" type="text" name="category1">
+    </div>
+    <div class="page-panel-input">
+        <label for="new-post-category2">Category 2</label>
+        <input id="new-post-category2" type="text" name="category2">
+    </div>
+    <div class="page-panel-textarea">
+        <label for="new-post-tags">Name</label>
+        <textarea rows="3" id="new-post-tags" name="tags"></textarea>
+    </div>
+    <button class="create-btn">
+        <a>Create</a>
+    </button>
+</form>
+{% endblock cont %}
