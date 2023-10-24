@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block cont %}
-<form class="page-panel page-panel-auth">
+<form action="/sign-in-post" method="post" class="page-panel page-panel-auth" enctype="application/x-www-form-urlencoded">
+    {% if error %}
+        <span class="error">{{ error }}</span>
+    {% endif %}
+    {{ csrf_token | safe }}
     <div class="page-panel-title">
         Sign in
     </div>

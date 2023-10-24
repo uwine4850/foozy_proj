@@ -1,25 +1,29 @@
 {% extends "base.html" %}
 
 {% block cont %}
-<form class="page-panel page-panel-auth">
+<form action="/register-post"  method="post" class="page-panel page-panel-auth" enctype="application/x-www-form-urlencoded">
+    {% if error %}
+        <span class="error">{{ error }}</span>
+    {% endif %}
+    {{ csrf_token | safe }}
     <div class="page-panel-title">
         Register
     </div>
     <div class="page-panel-input">
         <label for="new-post-name">Name</label>
-        <input id="new-post-name" type="text" name="name">
+        <input id="new-post-name" type="text" name="name" required>
     </div>
     <div class="page-panel-input">
         <label for="new-post-username">Username</label>
-        <input id="new-post-username" type="text" name="username">
+        <input id="new-post-username" type="text" name="username" required>
     </div>
     <div class="page-panel-input">
         <label for="new-post-password">Password</label>
-        <input id="new-post-password" type="password" name="password">
+        <input id="new-post-password" type="password" name="password" required>
     </div>
     <div class="page-panel-input">
         <label for="new-post-confirm-pass">Password again</label>
-        <input id="new-post-confirm-pass" type="password" name="confirm_pass">
+        <input id="new-post-confirm-pass" type="password" name="confirm_pass" required>
     </div>
     <button class="submit-btn">
         <a>Create</a>

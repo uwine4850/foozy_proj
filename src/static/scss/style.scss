@@ -23,3 +23,11 @@ body{
 ::-webkit-scrollbar-thumb{
   background-color: #454545;
 }
+
+.error{
+  font-size: 18px;
+  color: red;
+  padding: 10px;
+  background-color: $secondaryColor;
+  border-radius: 3px;
+}
