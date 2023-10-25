@@ -3,7 +3,6 @@ package utils
 import (
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router/form"
-	"log"
 	"net/http"
 	"net/url"
 )
@@ -12,7 +11,6 @@ func ConvertApplicationFormFields(fieldsName []string, applicationForm url.Value
 	output := map[string]string{}
 	for i := 0; i < len(fieldsName); i++ {
 		if !applicationForm.Has(fieldsName[i]) {
-			log.Println(fieldsName[i])
 			return nil, false
 		}
 		output[fieldsName[i]] = applicationForm.Get(fieldsName[i])
@@ -41,4 +39,9 @@ func ParseForm(r *http.Request) (*form.Form, error) {
 		return nil, err
 	}
 	return frm, nil
+}
+
+func ServerForbidden(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusForbidden)
+	w.Write([]byte("403 forbidden"))
 }

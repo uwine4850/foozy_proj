@@ -43,14 +43,10 @@ func main() {
 	newRouter.Post("/register-post", handlers.RegisterPost)
 	newRouter.Get("/sign-in", handlers.SignIn)
 	newRouter.Post("/sign-in-post", handlers.SignInPost)
-	newRouter.Get("/profile/<id>/edit", func(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) {
-		manager.SetTemplatePath("src/templates/profile_edit.html")
-		err := manager.RenderTemplate(w, r)
-		if err != nil {
-			panic(err)
-		}
-	})
+	newRouter.Get("/profile/<id>/edit", handlers.ProfileEdit)
+	newRouter.Post("/profile-edit-post/<id>", handlers.ProfileEditPost)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
+	newRouter.GetMux().Handle("/media/", http.StripPrefix("/media/", http.FileServer(http.Dir("src/media"))))
 	server := server2.NewServer(":8000", newRouter)
 	err = server.Start()
 	if err != nil {

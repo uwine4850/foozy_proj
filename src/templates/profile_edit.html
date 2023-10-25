@@ -1,17 +1,21 @@
 {% extends "base.html" %}
 
 {% block cont %}
-<form class="page-panel">
+<form action="/profile-edit-post/{{ user.Id }}" method="post" class="page-panel" enctype="multipart/form-data">
+    {% if error %}
+       <span class="error">{{ error }}</span>
+    {% endif %}
+    {{ csrf_token | safe }}
     <div class="page-panel-title">
         Profile edit
     </div>
     <div class="page-panel-input">
         <label for="profile-e-name">Name</label>
-        <input id="profile-e-name" type="text" name="name">
+        <input id="profile-e-name" type="text" name="name" value="{{ user.Name }}">
     </div>
     <div class="page-panel-textarea">
         <label for="profile-e-description">Description</label>
-        <textarea rows="5" id="profile-e-description" name="description"></textarea>
+        <textarea rows="5" id="profile-e-description" name="description">{{ user.Description }}</textarea>
     </div>
     <div class="page-panel-input">
         <label for="profile-e-avatar">Avatar</label>
