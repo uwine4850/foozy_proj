@@ -4,7 +4,7 @@ import (
 	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
-	"log"
+	"github.com/uwine4850/foozy_proj/src/utils"
 	"net/http"
 )
 
@@ -20,18 +20,21 @@ func AuthMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 		db := database.NewDatabase("root", "1111", "mysql", "3406", "foozy_proj")
 		err = db.Connect()
 		if err != nil {
-			log.Panicln(err)
+			utils.ServerError(w, err.Error())
+			return
 		}
 		defer func(db *database.Database) {
 			err := db.Close()
 			if err != nil {
-				panic(err)
+				utils.ServerError(w, err.Error())
+				return
 			}
 		}(db)
 
 		res, err := db.SyncQ().Select([]string{"username"}, "auth", []dbutils.DbEquals{{"id", uid.Value}}, 1)
 		if err != nil {
-			log.Panicln(err)
+			utils.ServerError(w, err.Error())
+			return
 		}
 		if res == nil {
 			http.Redirect(w, r, "/sign-in", http.StatusFound)

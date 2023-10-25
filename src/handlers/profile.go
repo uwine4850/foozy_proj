@@ -6,10 +6,8 @@ import (
 	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
-	"github.com/uwine4850/foozy/pkg/router/form"
 	"github.com/uwine4850/foozy_proj/src/conf"
 	"github.com/uwine4850/foozy_proj/src/utils"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -24,72 +22,68 @@ func Register(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 	}
 	err := manager.RenderTemplate(w, r)
 	if err != nil {
-		panic(err)
+		utils.ServerError(w, err.Error())
 	}
-
 }
 
 func RegisterPost(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) {
-	frm := form.NewForm(r)
-	err := frm.Parse()
+	frm, err := utils.ParseForm(r)
 	if err != nil {
-		panic(err)
-	}
-	err = frm.ValidateCsrfToken()
-	if err != nil {
-		panic(err)
+		utils.RedirectError(w, r, "/register", err.Error(), manager)
+		return
 	}
 	fields, ok := utils.ConvertApplicationFormFields([]string{"name", "username", "password", "confirm_pass"}, frm.GetApplicationForm())
 	if !ok {
-		manager.SetUserContext("error", "Some field not exist.")
-		http.Redirect(w, r, "/register", http.StatusFound)
+		utils.RedirectError(w, r, "/register", "Some field not exist.", manager)
 		return
 	}
 	if fields["password"] != fields["confirm_pass"] {
-		manager.SetUserContext("error", "The passwords don't match.")
-		http.Redirect(w, r, "/register", http.StatusFound)
+		utils.RedirectError(w, r, "/register", "The passwords don't match.", manager)
 		return
 	}
-	db := database.NewDatabase("root", "1111", "mysql", "3406", "foozy_proj")
+	db := conf.DatabaseI
 	err = db.Connect()
 	if err != nil {
-		panic(err)
+		utils.RedirectError(w, r, "/register", err.Error(), manager)
+		return
 	}
 	defer func(db *database.Database) {
 		err := db.Close()
 		if err != nil {
-			panic(err)
+			utils.ServerError(w, err.Error())
 		}
 	}(db)
 	newAuth, err := auth.NewAuth(db)
 	if err != nil {
-		log.Panicln(err.Error())
+		utils.RedirectError(w, r, "/register", err.Error(), manager)
+		return
 	}
 
 	// Register new user.
 	err = newAuth.RegisterUser(fields["username"], fields["password"])
 	if err != nil {
-		manager.SetUserContext("error", err.Error())
-		http.Redirect(w, r, "/register", http.StatusFound)
+		utils.RedirectError(w, r, "/register", err.Error(), manager)
 		return
 	}
 	user, err := newAuth.UserExist(fields["username"])
 	if err != nil {
-		log.Panicln(err.Error())
+		utils.RedirectError(w, r, "/register", err.Error(), manager)
+		return
 	}
 	if user != nil {
 		id, err := dbutils.ParseInt(user["id"])
 		if err != nil {
-			log.Panicln(err.Error())
+			utils.RedirectError(w, r, "/register", err.Error(), manager)
+			return
 		}
 		_, err = db.SyncQ().Update("auth", []dbutils.DbEquals{{"name", fields["name"]}},
 			[]dbutils.DbEquals{{"id", id}})
 		if err != nil {
-			log.Panicln(err.Error())
+			utils.RedirectError(w, r, "/register", err.Error(), manager)
+			return
 		}
 	} else {
-		manager.SetUserContext("error", fmt.Sprintf("Username %s not exist.", fields["username"]))
-		http.Redirect(w, r, "/register", http.StatusFound)
+		utils.RedirectError(w, r, "/register", fmt.Sprintf("Username %s not exist.", fields["username"]), manager)
 		return
 	}
 	http.Redirect(w, r, "/sign-in", http.StatusFound)
@@ -105,63 +99,58 @@ func SignIn(w http.ResponseWriter, r *http.Request, manager interfaces.IManager)
 	}
 	err := manager.RenderTemplate(w, r)
 	if err != nil {
-		panic(err)
+		utils.ServerError(w, err.Error())
+		return
 	}
 }
 
 func SignInPost(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) {
-	frm := form.NewForm(r)
-	err := frm.Parse()
+	frm, err := utils.ParseForm(r)
 	if err != nil {
-		panic(err)
-	}
-	err = frm.ValidateCsrfToken()
-	if err != nil {
-		manager.SetUserContext("error", err.Error())
-		http.Redirect(w, r, "/sign-in", http.StatusFound)
+		utils.RedirectError(w, r, "/sign-in", err.Error(), manager)
 		return
 	}
 	fields, ok := utils.ConvertApplicationFormFields([]string{"username", "password"}, frm.GetApplicationForm())
 	if !ok {
-		manager.SetUserContext("error", "Some field not exist.")
-		http.Redirect(w, r, "/sign-in", http.StatusFound)
+		utils.RedirectError(w, r, "/sign-in", "Some field not exist.", manager)
 		return
 	}
 	// Connect to database.
-	db := database.NewDatabase("root", "1111", "mysql", "3406", "foozy_proj")
+	db := conf.DatabaseI
 	err = db.Connect()
 	if err != nil {
-		panic(err)
+		utils.RedirectError(w, r, "/sign-in", err.Error(), manager)
+		return
 	}
 	defer func(db *database.Database) {
 		err := db.Close()
 		if err != nil {
-			panic(err)
+			utils.ServerError(w, err.Error())
 		}
 	}(db)
 
 	// New auth.
 	newAuth, err := auth.NewAuth(db)
 	if err != nil {
-		log.Panicln(err.Error())
+		utils.RedirectError(w, r, "/sign-in", err.Error(), manager)
+		return
 	}
 	err = newAuth.LoginUser(fields["username"], fields["password"])
 	if err != nil {
-		manager.SetUserContext("error", err.Error())
-		http.Redirect(w, r, "/sign-in", http.StatusFound)
+		utils.RedirectError(w, r, "/sign-in", err.Error(), manager)
 		return
 	}
 	// If the user exists set their ID in cookies.
 	user, err := newAuth.UserExist(fields["username"])
 	if err != nil {
-		manager.SetUserContext("error", err.Error())
-		http.Redirect(w, r, "/sign-in", http.StatusFound)
+		utils.RedirectError(w, r, "/sign-in", err.Error(), manager)
 		return
 	}
 	if user != nil {
 		id, err := dbutils.ParseInt(user["id"])
 		if err != nil {
-			log.Panicln(err)
+			utils.RedirectError(w, r, "/sign-in", err.Error(), manager)
+			return
 		}
 		cookie := &http.Cookie{
 			Name:     "UID",
@@ -178,17 +167,19 @@ func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 	id, _ := manager.GetSlugParams("id")
 	err := conf.DatabaseI.Connect()
 	if err != nil {
-		log.Panicln(err)
+		utils.ServerError(w, err.Error())
+		return
 	}
 	defer func(DatabaseI *database.Database) {
 		err := DatabaseI.Close()
 		if err != nil {
-			log.Panicln(err)
+			utils.ServerError(w, err.Error())
 		}
 	}(conf.DatabaseI)
 	user, err := conf.DatabaseI.SyncQ().Select([]string{"*"}, "auth", []dbutils.DbEquals{{"id", id}}, 1)
 	if err != nil {
-		log.Panicln(err)
+		utils.ServerError(w, err.Error())
+		return
 	}
 
 	// Render 404 if user not found
@@ -196,7 +187,8 @@ func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 		w.WriteHeader(http.StatusNotFound)
 		_, err := w.Write([]byte("User not found"))
 		if err != nil {
-			log.Panicln(err)
+			utils.ServerError(w, err.Error())
+			return
 		}
 		return
 	}
