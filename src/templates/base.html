@@ -31,16 +31,23 @@
             <span class="notification-count">1</span>
         </button>
         <span class="hu-menu hu-menu-hidden" id="hu-menu">
+            <a href="/prof/{{ UID }}">Profile</a>
             <a href="#"><span class="hu-menu-n-count">1</span>Notifications</a>
             <a href="#">Messages</a>
             <a href="#">New post</a>
-            <a href="#" class="hu-log-out">Log out</a>
+            <a href="#" id="hu-log-out" class="hu-log-out">Log out</a>
         </span>
+        <form action="/log-out-post" method="post" id="log-out-form" enctype="application/x-www-form-urlencoded"></form>
     </div>
 </header>
 {% block cont %}
 {% endblock cont %}
 <script type="text/javascript" src="/static/js/bundle.js"></script>
 <script type="text/javascript" src="/static/js/splide.min.js"></script>
+<script>
+    document.getElementById("hu-log-out").onclick = function (){
+        document.getElementById("log-out-form").submit();
+    }
+</script>
 </body>
 </html>

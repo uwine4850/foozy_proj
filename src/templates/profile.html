@@ -5,7 +5,7 @@
     <div class="profile-left-side">
         {% if user.Avatar %}
         <div class="profile-avatar">
-            <img src="/static/img/temp/2.jpeg" alt="">
+            <img src="/{{ user.Avatar }}" alt="">
         </div>
         {% else %}
         <div class="profile-avatar">
@@ -47,12 +47,18 @@
             </div>
         </div>
         <div class="profile-buttons">
+            {% if user.Id == UID %}
+            <button class="profile-button-edit">
+                <a href="/profile/{{ UID }}/edit"><img src="/static/img/edit.svg">Edit</a>
+            </button>
+            {% else %}
             <button class="profile-button-subscribe">
                 <a><img src="/static/img/subscribe.svg">Subscribe</a>
             </button>
             <button class="profile-button-message">
                 <a><img src="/static/img/message.svg">Message</a>
             </button>
+            {% endif %}
         </div>
         {% if user.Description %}
         <div class="profile-description">

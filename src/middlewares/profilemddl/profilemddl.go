@@ -39,5 +39,6 @@ func AuthMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 		if res == nil {
 			http.Redirect(w, r, "/sign-in", http.StatusFound)
 		}
+		manager.SetUserContext("UID", uid.Value)
 	}
 }

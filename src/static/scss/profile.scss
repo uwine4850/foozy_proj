@@ -85,6 +85,9 @@
   .profile-button-message{
     @include linkButton(#2E4E6C, rgba(0, 0, 0, 0.2))
   }
+  .profile-button-edit{
+    @include linkButton(#862E2E, rgba(0, 0, 0, 0.2))
+  }
 }
 
 .profile-description{

@@ -172,6 +172,9 @@ func SignInPost(w http.ResponseWriter, r *http.Request, manager interfaces.IMana
 }
 
 func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) {
+	_tempUID, _ := manager.GetUserContext("UID")
+	UID, _ := strconv.Atoi(_tempUID.(string))
+
 	id, _ := manager.GetSlugParams("id")
 	err := conf.DatabaseI.Connect()
 	if err != nil {
@@ -200,14 +203,16 @@ func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 		}
 		return
 	}
+	intId, _ := strconv.Atoi(id)
 	userD := userData{
+		Id:          intId,
 		Name:        dbutils.ParseString(user[0]["name"]),
 		Username:    dbutils.ParseString(user[0]["username"]),
 		Avatar:      dbutils.ParseString(user[0]["avatar"]),
 		Description: dbutils.ParseString(user[0]["description"]),
 	}
 	manager.SetTemplatePath("src/templates/profile.html")
-	manager.SetContext(map[string]interface{}{"user": userD})
+	manager.SetContext(map[string]interface{}{"user": userD, "UID": UID})
 	err = manager.RenderTemplate(w, r)
 	if err != nil {
 		panic(err)
@@ -301,7 +306,7 @@ func ProfileEditPost(w http.ResponseWriter, r *http.Request, manager interfaces.
 		}
 		var buildPath string
 		if !errors.Is(err, http.ErrMissingFile) {
-			if !SaveFile(w, file, fileHeader, "/usr/src/app/src/media/avatars/", &buildPath) {
+			if !SaveFile(w, file, fileHeader, "media/avatars/", &buildPath) {
 				return
 			}
 		}
@@ -359,15 +364,28 @@ func ProfileEditPost(w http.ResponseWriter, r *http.Request, manager interfaces.
 		utils.ServerError(w, err.Error())
 		return
 	}
+	http.Redirect(w, r, fmt.Sprintf("/prof/%s", uid), http.StatusFound)
 }
 
-func SaveFileExist(pathToDir string, fileName string) string {
+func ProfileLogOutPost(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) {
+	cookie := &http.Cookie{
+		Name:     "UID",
+		Value:    "",
+		HttpOnly: true,
+		Secure:   true,
+		MaxAge:   -1,
+	}
+	http.SetCookie(w, cookie)
+	http.Redirect(w, r, "/sign-in", http.StatusFound)
+}
+
+func saveFileExist(pathToDir string, fileName string) string {
 	outputFilepath := pathToDir + fileName
 	if utils2.PathExist(pathToDir + fileName) {
 		hash := sha256.Sum256([]byte(fileName))
 		hashData := hex.EncodeToString(hash[:])
 		ext := filepath.Ext(fileName)
-		return SaveFileExist(pathToDir, hashData+ext)
+		return saveFileExist(pathToDir, hashData+ext)
 	}
 	return outputFilepath
 }
@@ -380,7 +398,7 @@ func SaveFile(w http.ResponseWriter, file multipart.File, fileHeader *multipart.
 		}
 	}(file)
 
-	fp := SaveFileExist(pathToDir, fileHeader.Filename)
+	fp := saveFileExist(pathToDir, fileHeader.Filename)
 	*buildPath = fp
 	dst, err := os.Create(fp)
 	if err != nil {
