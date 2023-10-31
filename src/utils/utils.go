@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router/form"
 	"net/http"
 	"net/url"
@@ -16,11 +15,6 @@ func ConvertApplicationFormFields(fieldsName []string, applicationForm url.Value
 		output[fieldsName[i]] = applicationForm.Get(fieldsName[i])
 	}
 	return output, true
-}
-
-func RedirectError(w http.ResponseWriter, r *http.Request, path string, err string, manager interfaces.IManager) {
-	manager.SetUserContext("error", err)
-	http.Redirect(w, r, path, http.StatusFound)
 }
 
 func ServerError(w http.ResponseWriter, err string) {
@@ -39,9 +33,4 @@ func ParseForm(r *http.Request) (*form.Form, error) {
 		return nil, err
 	}
 	return frm, nil
-}
-
-func ServerForbidden(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusForbidden)
-	w.Write([]byte("403 forbidden"))
 }

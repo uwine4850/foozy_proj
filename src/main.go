@@ -7,7 +7,7 @@ import (
 	"github.com/uwine4850/foozy/pkg/router"
 	server2 "github.com/uwine4850/foozy/pkg/server"
 	"github.com/uwine4850/foozy/pkg/tmlengine"
-	"github.com/uwine4850/foozy_proj/src/handlers"
+	"github.com/uwine4850/foozy_proj/src/handlers/profile"
 	"github.com/uwine4850/foozy_proj/src/middlewares/profilemddl"
 	"net/http"
 )
@@ -24,30 +24,30 @@ func main() {
 	newRouter := router.NewRouter(manager)
 	newRouter.EnableLog(true)
 	newRouter.SetMiddleware(mddl)
-	newRouter.Get("/home", func(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) {
+	newRouter.Get("/home", func(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
 		manager.SetTemplatePath("src/templates/home.html")
-		UID, _ := manager.GetUserContext("UID")
-		manager.SetContext(map[string]interface{}{"UID": UID.(string)})
 		err := manager.RenderTemplate(w, r)
 		if err != nil {
 			panic(err)
 		}
+		return func() {}
 	})
-	newRouter.Get("/prof/<id>", handlers.ProfileView)
-	newRouter.Get("/new-post", func(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) {
+	newRouter.Get("/prof/<id>", profile.ProfileView)
+	newRouter.Get("/new-post", func(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
 		manager.SetTemplatePath("src/templates/new_post.html")
 		err := manager.RenderTemplate(w, r)
 		if err != nil {
 			panic(err)
 		}
+		return func() {}
 	})
-	newRouter.Get("/register", handlers.Register)
-	newRouter.Post("/register-post", handlers.RegisterPost)
-	newRouter.Get("/sign-in", handlers.SignIn)
-	newRouter.Post("/sign-in-post", handlers.SignInPost)
-	newRouter.Get("/profile/<id>/edit", handlers.ProfileEdit)
-	newRouter.Post("/profile-edit-post/<id>", handlers.ProfileEditPost)
-	newRouter.Post("/log-out-post", handlers.ProfileLogOutPost)
+	newRouter.Get("/register", profile.Register)
+	newRouter.Post("/register-post", profile.RegisterPost)
+	newRouter.Get("/sign-in", profile.SignIn)
+	newRouter.Post("/sign-in-post", profile.SignInPost)
+	newRouter.Get("/profile/<id>/edit", profile.ProfileEdit)
+	newRouter.Post("/profile-edit-post/<id>", profile.ProfileEditPost)
+	newRouter.Post("/log-out-post", profile.ProfileLogOutPost)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
 	newRouter.GetMux().Handle("/media/", http.StripPrefix("/media/", http.FileServer(http.Dir("media"))))
 	server := server2.NewServer(":8000", newRouter)
