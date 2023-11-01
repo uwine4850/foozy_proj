@@ -26,7 +26,7 @@
                     Subscribers
                 </div>
                 <div class="p-item-value">
-                    356
+                    {{ subCount }}
                 </div>
             </div>
             <div class="p-item">
@@ -52,9 +52,19 @@
                 <a href="/profile/{{ UID }}/edit"><img src="/static/img/edit.svg">Edit</a>
             </button>
             {% else %}
-            <button class="profile-button-subscribe">
-                <a><img src="/static/img/subscribe.svg">Subscribe</a>
-            </button>
+                {% if isSubscribe %}
+                    <form method="post" action="/subscribe-post" enctype="application/x-www-form-urlencoded">
+                        <button class="profile-button-subscribe profile-button-unsubscribe">
+                            <a><img src="/static/img/subscribe.svg">Unsubscribe</a>
+                        </button>
+                    </form>
+                {% else %}
+                    <form method="post" action="/subscribe-post" enctype="application/x-www-form-urlencoded">
+                        <button class="profile-button-subscribe">
+                            <a><img src="/static/img/subscribe.svg">Subscribe</a>
+                        </button>
+                    </form>
+                {% endif %}
             <button class="profile-button-message">
                 <a><img src="/static/img/message.svg">Message</a>
             </button>

@@ -48,6 +48,7 @@ func main() {
 	newRouter.Get("/profile/<id>/edit", profile.ProfileEdit)
 	newRouter.Post("/profile-edit-post/<id>", profile.ProfileEditPost)
 	newRouter.Post("/log-out-post", profile.ProfileLogOutPost)
+	newRouter.Post("/subscribe-post", profile.SubscribePost)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
 	newRouter.GetMux().Handle("/media/", http.StripPrefix("/media/", http.FileServer(http.Dir("media"))))
 	server := server2.NewServer(":8000", newRouter)

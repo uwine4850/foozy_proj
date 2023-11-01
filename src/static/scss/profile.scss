@@ -82,6 +82,9 @@
     @include linkButton(#862E2E, rgba(0, 0, 0, 0.2));
     margin-right: 10px;
   }
+  .profile-button-unsubscribe{
+    @include linkButton($secondaryColor, rgba(0, 0, 0, 0.2));
+  }
   .profile-button-message{
     @include linkButton(#2E4E6C, rgba(0, 0, 0, 0.2))
   }

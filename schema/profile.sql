@@ -1,3 +1,4 @@
+use foozy_proj;
 CREATE TABLE `foozy_proj`.`auth` (
     `id` INT NOT NULL AUTO_INCREMENT ,
     `username` VARCHAR(200) NOT NULL ,

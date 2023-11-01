@@ -40,5 +40,6 @@ func AuthMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 			http.Redirect(w, r, "/sign-in", http.StatusFound)
 		}
 		manager.SetContext(map[string]interface{}{"UID": uid.Value})
+		manager.SetUserContext("UID", uid.Value)
 	}
 }
