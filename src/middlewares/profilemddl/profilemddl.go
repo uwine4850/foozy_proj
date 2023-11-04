@@ -21,12 +21,14 @@ func AuthMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 		err = db.Connect()
 		if err != nil {
 			utils.ServerError(w, err.Error())
+			manager.SetUserContext("mddl_error", "")
 			return
 		}
 		defer func(db *database.Database) {
 			err := db.Close()
 			if err != nil {
 				utils.ServerError(w, err.Error())
+				manager.SetUserContext("mddl_error", "")
 				return
 			}
 		}(db)
@@ -34,6 +36,7 @@ func AuthMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 		res, err := db.SyncQ().Select([]string{"username"}, "auth", []dbutils.DbEquals{{"id", uid.Value}}, 1)
 		if err != nil {
 			utils.ServerError(w, err.Error())
+			manager.SetUserContext("mddl_error", "")
 			return
 		}
 		if res == nil {

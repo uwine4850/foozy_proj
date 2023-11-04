@@ -25,6 +25,10 @@ func main() {
 	newRouter.EnableLog(true)
 	newRouter.SetMiddleware(mddl)
 	newRouter.Get("/home", func(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
+		_, ok := manager.GetUserContext("mddl_error")
+		if ok {
+			return func() {}
+		}
 		manager.SetTemplatePath("src/templates/home.html")
 		err := manager.RenderTemplate(w, r)
 		if err != nil {
@@ -49,6 +53,7 @@ func main() {
 	newRouter.Post("/profile-edit-post/<id>", profile.ProfileEditPost)
 	newRouter.Post("/log-out-post", profile.ProfileLogOutPost)
 	newRouter.Post("/subscribe-post", profile.SubscribePost)
+	newRouter.Get("/my-subscriptions", profile.MySubscriptions)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
 	newRouter.GetMux().Handle("/media/", http.StripPrefix("/media/", http.FileServer(http.Dir("media"))))
 	server := server2.NewServer(":8000", newRouter)

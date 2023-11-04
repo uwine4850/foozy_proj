@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-type userData struct {
+type UserData struct {
 	Id          string `db:"id"`
 	Name        string `db:"name"`
 	Username    string `db:"username"`
@@ -44,7 +44,7 @@ func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 		return func() {}
 	}
 	manager.SetUserContext("subscribe_user_id", id)
-	var fillUserData userData
+	var fillUserData UserData
 	err = dbutils.FillStructFromDb(user[0], &fillUserData)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }

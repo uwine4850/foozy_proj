@@ -43,7 +43,7 @@ func ProfileEdit(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
-	var fillUserData userData
+	var fillUserData UserData
 	err = dbutils.FillStructFromDb(user[0], &fillUserData)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
