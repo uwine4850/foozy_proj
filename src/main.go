@@ -7,6 +7,7 @@ import (
 	"github.com/uwine4850/foozy/pkg/router"
 	server2 "github.com/uwine4850/foozy/pkg/server"
 	"github.com/uwine4850/foozy/pkg/tmlengine"
+	"github.com/uwine4850/foozy_proj/src/handlers/chat"
 	"github.com/uwine4850/foozy_proj/src/handlers/profile"
 	"github.com/uwine4850/foozy_proj/src/middlewares/profilemddl"
 	"net/http"
@@ -54,6 +55,8 @@ func main() {
 	newRouter.Post("/log-out-post", profile.ProfileLogOutPost)
 	newRouter.Post("/subscribe-post", profile.SubscribePost)
 	newRouter.Get("/my-subscriptions", profile.MySubscriptions)
+	newRouter.Get("/chat", chat.Chat)
+	newRouter.Get("/chat-list", chat.ChatList)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
 	newRouter.GetMux().Handle("/media/", http.StripPrefix("/media/", http.FileServer(http.Dir("media"))))
 	server := server2.NewServer(":8000", newRouter)
