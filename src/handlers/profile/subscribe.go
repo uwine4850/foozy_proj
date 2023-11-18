@@ -26,15 +26,15 @@ func SubscribePost(w http.ResponseWriter, r *http.Request, manager interfaces.IM
 		}
 	}(db)
 
-	res, err := db.SyncQ().Select([]string{"*"}, "subscribers", []dbutils.DbEquals{
-		{"subscriber", UID},
-		{"profile", subscribeUserId},
-	}, 1)
+	res, err := db.SyncQ().Select([]string{"*"}, "subscribers", dbutils.WHEquals(map[string]interface{}{
+		"subscriber": UID,
+		"profile":    subscribeUserId,
+	}, "AND"), 1)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
 	if res != nil {
-		_, err := db.SyncQ().Delete("subscribers", []dbutils.DbEquals{{"id", res[0]["id"]}})
+		_, err := db.SyncQ().Delete("subscribers", dbutils.WHEquals(map[string]interface{}{"id": res[0]["id"]}, "AND"))
 		if err != nil {
 			return func() { router.ServerError(w, err.Error()) }
 		}

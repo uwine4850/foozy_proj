@@ -1,6 +1,7 @@
 import '../scss/style.scss';
 import {runIfExist} from "./utils";
 import {Ajax} from "./ajax";
+import {RunWs} from "./chat_ws";
 
 runIfExist(document.getElementById("header-user"), function (el) {
     el.onclick = function (){
@@ -39,3 +40,8 @@ subscribeAjax.onSuccess(function (response: string) {
     subscribers.innerHTML = String(subscribersValue);
 });
 subscribeAjax.listen()
+
+const regex = /^\/chat\/\d+$/;
+if (regex.test(window.location.pathname)){
+    RunWs();
+}

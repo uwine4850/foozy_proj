@@ -41,7 +41,7 @@ func RegisterPost(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		return func() { router.RedirectError(w, r, "/register", err.Error(), manager) }
 	}
 	var registerForm RegisterForm
-	err = form.FillStructFromForm(frm, &registerForm)
+	err = form.FillStructFromForm(frm, &registerForm, []string{})
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
@@ -79,7 +79,7 @@ func RegisterPost(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 			return func() { router.RedirectError(w, r, "/register", err.Error(), manager) }
 		}
 		_, err = db.SyncQ().Update("auth", []dbutils.DbEquals{{"name", registerForm.Name[0]}},
-			[]dbutils.DbEquals{{"id", id}})
+			dbutils.WHEquals(map[string]interface{}{"id": id}, "AND"))
 		if err != nil {
 			return func() { router.RedirectError(w, r, "/register", err.Error(), manager) }
 		}

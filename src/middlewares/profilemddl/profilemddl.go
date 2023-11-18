@@ -33,7 +33,7 @@ func AuthMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 			}
 		}(db)
 
-		res, err := db.SyncQ().Select([]string{"username"}, "auth", []dbutils.DbEquals{{"id", uid.Value}}, 1)
+		res, err := db.SyncQ().Select([]string{"username"}, "auth", dbutils.WHEquals(map[string]interface{}{"id": uid.Value}, "AND"), 1)
 		if err != nil {
 			utils.ServerError(w, err.Error())
 			manager.SetUserContext("mddl_error", "")

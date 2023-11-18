@@ -39,7 +39,9 @@ func ProfileEdit(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
-	user, err := db.SyncQ().Select([]string{"*"}, "auth", []dbutils.DbEquals{{"id", uidInt}}, 1)
+	user, err := db.SyncQ().Select([]string{"*"}, "auth", dbutils.WHEquals(map[string]interface{}{
+		"id": uidInt,
+	}, "AND"), 1)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
@@ -83,7 +85,7 @@ func ProfileEditPost(w http.ResponseWriter, r *http.Request, manager interfaces.
 		return func() { router.RedirectError(w, r, fmt.Sprintf("/profile/%s/edit", uid), err.Error(), manager) }
 	}
 	var fillProfileEditForm editFormData
-	err = form.FillStructFromForm(frm, &fillProfileEditForm)
+	err = form.FillStructFromForm(frm, &fillProfileEditForm, []string{})
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
@@ -122,7 +124,9 @@ func ProfileEditPost(w http.ResponseWriter, r *http.Request, manager interfaces.
 		{"description", fillProfileEditForm.Description[0]},
 	}
 	// Delete avatar
-	user, err := db.SyncQ().Select([]string{"*"}, "auth", []dbutils.DbEquals{{"id", uid}}, 1)
+	user, err := db.SyncQ().Select([]string{"*"}, "auth", dbutils.WHEquals(map[string]interface{}{
+		"id": uid,
+	}, "AND"), 1)
 	dbAvatarPath := dbutils.ParseString(user[0]["avatar"])
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
@@ -147,7 +151,9 @@ func ProfileEditPost(w http.ResponseWriter, r *http.Request, manager interfaces.
 			}
 		}
 	}
-	_, err = db.SyncQ().Update("auth", updSlice, []dbutils.DbEquals{{"id", uid}})
+	_, err = db.SyncQ().Update("auth", updSlice, dbutils.WHEquals(map[string]interface{}{
+		"id": uid,
+	}, "AND"))
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}

@@ -29,7 +29,7 @@ func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 			router.ServerError(w, err.Error())
 		}
 	}(conf.DatabaseI)
-	user, err := conf.DatabaseI.SyncQ().Select([]string{"*"}, "auth", []dbutils.DbEquals{{"id", id}}, 1)
+	user, err := conf.DatabaseI.SyncQ().Select([]string{"*"}, "auth", dbutils.WHEquals(map[string]interface{}{"id": id}, "AND"), 1)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
@@ -68,10 +68,10 @@ func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 }
 
 func userIsSubscribe(subscribeUserId any, uid any, db interfaces.IDatabase) (bool, error) {
-	res, err := db.SyncQ().Select([]string{"*"}, "subscribers", []dbutils.DbEquals{
-		{"subscriber", uid},
-		{"profile", subscribeUserId},
-	}, 1)
+	res, err := db.SyncQ().Select([]string{"*"}, "subscribers", dbutils.WHEquals(map[string]interface{}{
+		"subscriber": uid,
+		"profile":    subscribeUserId,
+	}, "AND"), 1)
 	if err != nil {
 		return false, err
 	}
@@ -83,11 +83,13 @@ func userIsSubscribe(subscribeUserId any, uid any, db interfaces.IDatabase) (boo
 }
 
 func getCountSubscribers(profileId any, db interfaces.IDatabase) (int, error) {
-	res, err := db.SyncQ().Query("SELECT COUNT(*) FROM `subscribers` WHERE profile = ?;", profileId)
+	count, err := db.SyncQ().Count([]string{"*"}, "subscribers", dbutils.WHEquals(map[string]interface{}{
+		"profile": profileId,
+	}, "AND"), 0)
 	if err != nil {
 		return 0, err
 	}
-	parseInt, err := dbutils.ParseInt(res[0]["COUNT(*)"])
+	parseInt, err := dbutils.ParseInt(count[0]["COUNT(*)"])
 	if err != nil {
 		return 0, err
 	}

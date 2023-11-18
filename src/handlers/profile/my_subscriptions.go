@@ -8,7 +8,6 @@ import (
 	"github.com/uwine4850/foozy/pkg/router"
 	"github.com/uwine4850/foozy_proj/src/conf"
 	"net/http"
-	"strings"
 )
 
 func MySubscriptions(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
@@ -27,19 +26,22 @@ func MySubscriptions(w http.ResponseWriter, r *http.Request, manager interfaces.
 			router.ServerError(w, err.Error())
 		}
 	}(db)
-	mySubscriptionsId, err := db.SyncQ().Select([]string{"profile"}, "subscribers", []dbutils.DbEquals{{"subscriber", uid}}, 0)
+	mySubscriptionsId, err := db.SyncQ().Select([]string{"profile"}, "subscribers", dbutils.WHEquals(map[string]interface{}{
+		"subscriber": uid,
+	}, "AND"), 0)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
-	var idList []string
+	var idList []interface{}
 	for i := 0; i < len(mySubscriptionsId); i++ {
 		idList = append(idList, fmt.Sprintf("%v", mySubscriptionsId[i]["profile"]))
 	}
 	usersData := make([]UserData, 0)
 	if idList != nil {
-		join := strings.Join(idList, ",")
-		sqlStr := "( " + join + " )"
-		users, err := db.SyncQ().Query("SELECT * FROM auth WHERE id IN " + sqlStr)
+		fmt.Println(idList)
+		users, err := db.SyncQ().Select([]string{"*"}, "auth", dbutils.WHInSlice(map[string][]interface{}{
+			"id": idList,
+		}, "AND"), 0)
 		if err != nil {
 			return func() { router.ServerError(w, err.Error()) }
 		}

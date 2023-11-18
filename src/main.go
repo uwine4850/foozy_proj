@@ -16,7 +16,9 @@ import (
 func main() {
 	mddl := middlewares.NewMiddleware()
 	mddl.AsyncHandlerMddl(builtin_mddl.GenerateAndSetCsrf)
+	//mddl.AsyncHandlerMddl(chatmddl.ChatPermissionMddl)
 	mddl.HandlerMddl(1, profilemddl.AuthMddl)
+	//mddl.HandlerMddl(2, chatmddl.ChatPermissionMddl)
 	engine, err := tmlengine.NewTemplateEngine()
 	if err != nil {
 		panic(err)
@@ -55,8 +57,9 @@ func main() {
 	newRouter.Post("/log-out-post", profile.ProfileLogOutPost)
 	newRouter.Post("/subscribe-post", profile.SubscribePost)
 	newRouter.Get("/my-subscriptions", profile.MySubscriptions)
-	newRouter.Get("/chat", chat.Chat)
+	newRouter.Get("/chat/<id>", chat.Chat)
 	newRouter.Get("/chat-list", chat.ChatList)
+	newRouter.Ws("/chat-ws", router.NewWebsocket(router.Upgrader), chat.ChatWs)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
 	newRouter.GetMux().Handle("/media/", http.StripPrefix("/media/", http.FileServer(http.Dir("media"))))
 	server := server2.NewServer(":8000", newRouter)

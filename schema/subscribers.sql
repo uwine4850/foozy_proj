@@ -1,6 +1,6 @@
 use foozy_proj;
 
-CREATE TABLE `foozy_proj`.`subscribers` (
+CREATE TABLE IF NOT EXISTS `foozy_proj`.`subscribers` (
     `id` INT NOT NULL AUTO_INCREMENT ,
     `subscriber` INT NOT NULL ,
     `profile` INT NOT NULL ,

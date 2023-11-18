@@ -3,101 +3,40 @@
 {% block cont %}
 <div class="chat-border">
     <div class="chat-user">
-        <div class="chat-user-avatar">
-            <img src="/media/avatars/chengwei-xu-003.jpeg">
-        </div>
-        <a href="#" class="chat-user-username">@renxbo</a>
+        {% if user.Avatar %}
+            <div class="chat-user-avatar">
+                <img src="/{{ user.Avatar }}">
+            </div>
+        {% else %}
+            <div class="chat-user-avatar">
+                <img src="/static/img/default.jpeg">
+            </div>
+        {% endif %}
+        <a href="/prof/{{ user.Id }}" class="chat-user-username">@{{ user.Username }}</a>
     </div>
-    <div class="chat-content">
-        <div class="chat-content-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfw epfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
-        <div class="chat-content-msg chat-content-msg-my-msg">
-            <div class="chat-content-msg-text">
-                wepfwfpewmfpwemfpwemfwepfwefmewfpwemfewpf
-            </div>
-            <div class="chat-content-msg-date">1/22/3333</div>
-        </div>
+    <div class="chat-content" id="chat-content">
+        {% for msg in messages %}
+            {% if msg.UserId != user.Id %}
+                <div class="chat-content-msg chat-content-msg-my-msg">
+                    <div class="chat-content-msg-text">
+                        {{ msg.Text }}
+                    </div>
+                    <div class="chat-content-msg-date">1/22/3333</div>
+                </div>
+            {% else %}
+                <div class="chat-content-msg">
+                    <div class="chat-content-msg-text">
+                        {{ msg.Text }}
+                    </div>
+                    <div class="chat-content-msg-date">1/22/3333</div>
+                </div>
+            {% endif %}
+        {% endfor %}
     </div>
     <form class="chat-form">
-        <textarea></textarea>
+        <textarea id="chat-textarea"></textarea>
         <div class="chat-form-menu">
-            <button>
+            <button type="button" id="send">
                 <a>Send</a>
             </button>
         </div>
