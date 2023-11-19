@@ -5,7 +5,7 @@ import (
 	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
-	"github.com/uwine4850/foozy/pkg/router"
+	"github.com/uwine4850/foozy/pkg/middlewares"
 	"github.com/uwine4850/foozy_proj/src/conf"
 	"net/http"
 	"regexp"
@@ -20,45 +20,53 @@ func ChatPermissionMddl(w http.ResponseWriter, r *http.Request, manager interfac
 	uid, err := r.Cookie("UID")
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
+			http.Redirect(w, r, "/home", http.StatusFound)
+			middlewares.SkipNextPage(manager)
 			return
 		}
-		panic(err)
+		middlewares.SetMddlError(err, manager)
+		return
 	}
 	chatId, _ := manager.GetSlugParams("id")
 	db := conf.DatabaseI
 	err = db.Connect()
 	if err != nil {
-		panic(err)
+		middlewares.SetMddlError(err, manager)
+		return
 	}
 	defer func(db *database.Database) {
 		err := db.Close()
 		if err != nil {
-			panic(err)
+			middlewares.SetMddlError(err, manager)
+			return
 		}
 	}(db)
 	chat, err := db.SyncQ().Select([]string{"*"}, "chat", dbutils.WHEquals(map[string]interface{}{
 		"id": chatId,
 	}, "AND"), 1)
 	if err != nil {
-		panic(err)
+		middlewares.SetMddlError(err, manager)
+		return
 	}
 	if chat == nil {
 		http.Redirect(w, r, "/home", http.StatusFound)
+		middlewares.SkipNextPage(manager)
 		return
 	}
 	user1, err := dbutils.ParseInt(chat[0]["user1"])
 	if err != nil {
-		router.ServerError(w, err.Error())
+		middlewares.SetMddlError(err, manager)
 		return
 	}
 	user2, err := dbutils.ParseInt(chat[0]["user2"])
 	if err != nil {
-		router.ServerError(w, err.Error())
+		middlewares.SetMddlError(err, manager)
 		return
 	}
 	uidInt, _ := strconv.Atoi(uid.Value)
 	if user1 != uidInt && user2 != uidInt {
 		http.Redirect(w, r, "/home", http.StatusFound)
+		middlewares.SkipNextPage(manager)
 		return
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/uwine4850/foozy/pkg/tmlengine"
 	"github.com/uwine4850/foozy_proj/src/handlers/chat"
 	"github.com/uwine4850/foozy_proj/src/handlers/profile"
+	"github.com/uwine4850/foozy_proj/src/middlewares/chatmddl"
 	"github.com/uwine4850/foozy_proj/src/middlewares/profilemddl"
 	"net/http"
 )
@@ -16,9 +17,8 @@ import (
 func main() {
 	mddl := middlewares.NewMiddleware()
 	mddl.AsyncHandlerMddl(builtin_mddl.GenerateAndSetCsrf)
-	//mddl.AsyncHandlerMddl(chatmddl.ChatPermissionMddl)
+	mddl.AsyncHandlerMddl(chatmddl.ChatPermissionMddl)
 	mddl.HandlerMddl(1, profilemddl.AuthMddl)
-	//mddl.HandlerMddl(2, chatmddl.ChatPermissionMddl)
 	engine, err := tmlengine.NewTemplateEngine()
 	if err != nil {
 		panic(err)
