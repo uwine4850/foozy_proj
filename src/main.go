@@ -59,6 +59,7 @@ func main() {
 	newRouter.Get("/my-subscriptions", profile.MySubscriptions)
 	newRouter.Get("/chat/<id>", chat.Chat)
 	newRouter.Get("/chat-list", chat.ChatList)
+	newRouter.Post("/create-chat", chat.CreateChatPost)
 	newRouter.Ws("/chat-ws", router.NewWebsocket(router.Upgrader), chat.ChatWs)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
 	newRouter.GetMux().Handle("/media/", http.StripPrefix("/media/", http.FileServer(http.Dir("media"))))

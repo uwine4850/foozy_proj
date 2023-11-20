@@ -6,6 +6,7 @@ import (
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/middlewares"
+	"github.com/uwine4850/foozy/pkg/router"
 	"github.com/uwine4850/foozy_proj/src/conf"
 	"net/http"
 	"regexp"
@@ -49,7 +50,7 @@ func ChatPermissionMddl(w http.ResponseWriter, r *http.Request, manager interfac
 		return
 	}
 	if chat == nil {
-		http.Redirect(w, r, "/home", http.StatusFound)
+		router.ServerForbidden(w)
 		middlewares.SkipNextPage(manager)
 		return
 	}
@@ -65,7 +66,7 @@ func ChatPermissionMddl(w http.ResponseWriter, r *http.Request, manager interfac
 	}
 	uidInt, _ := strconv.Atoi(uid.Value)
 	if user1 != uidInt && user2 != uidInt {
-		http.Redirect(w, r, "/home", http.StatusFound)
+		router.ServerForbidden(w)
 		middlewares.SkipNextPage(manager)
 		return
 	}

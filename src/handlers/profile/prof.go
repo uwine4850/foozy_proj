@@ -19,7 +19,8 @@ type UserData struct {
 
 func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
 	id, _ := manager.GetSlugParams("id")
-	err := conf.DatabaseI.Connect()
+	db := conf.DatabaseI
+	err := db.Connect()
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
@@ -28,8 +29,8 @@ func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 		if err != nil {
 			router.ServerError(w, err.Error())
 		}
-	}(conf.DatabaseI)
-	user, err := conf.DatabaseI.SyncQ().Select([]string{"*"}, "auth", dbutils.WHEquals(map[string]interface{}{"id": id}, "AND"), 1)
+	}(db)
+	user, err := db.SyncQ().Select([]string{"*"}, "auth", dbutils.WHEquals(map[string]interface{}{"id": id}, "AND"), 1)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
@@ -50,16 +51,20 @@ func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 		return func() { router.ServerError(w, err.Error()) }
 	}
 	UID, _ := manager.GetUserContext("UID")
-	isSubscribe, err := userIsSubscribe(id, UID, conf.DatabaseI)
+	isSubscribe, err := userIsSubscribe(id, UID, db)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
-	subCount, err := getCountSubscribers(id, conf.DatabaseI)
+	subCount, err := getCountSubscribers(id, db)
+	if err != nil {
+		return func() { router.ServerError(w, err.Error()) }
+	}
+	isChatExist, err := chatExist(id, UID, db)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
 	manager.SetTemplatePath("src/templates/profile.html")
-	manager.SetContext(map[string]interface{}{"user": fillUserData, "isSubscribe": isSubscribe, "subCount": subCount})
+	manager.SetContext(map[string]interface{}{"user": fillUserData, "isSubscribe": isSubscribe, "subCount": subCount, "isChatExist": isChatExist})
 	err = manager.RenderTemplate(w, r)
 	if err != nil {
 		panic(err)
@@ -92,6 +97,24 @@ func getCountSubscribers(profileId any, db interfaces.IDatabase) (int, error) {
 	parseInt, err := dbutils.ParseInt(count[0]["COUNT(*)"])
 	if err != nil {
 		return 0, err
+	}
+	return parseInt, nil
+}
+
+func chatExist(id any, uid any, db interfaces.IDatabase) (int, error) {
+	res, err := db.SyncQ().Select([]string{"*"}, "chat", dbutils.WHOutput{
+		QueryStr:  "user1 = ? AND user2 = ? OR user1 = ? AND user2 = ?",
+		QueryArgs: []interface{}{id, uid, uid, id},
+	}, 1)
+	if err != nil {
+		return -1, err
+	}
+	if res == nil {
+		return -1, nil
+	}
+	parseInt, err := dbutils.ParseInt(res[0]["id"])
+	if err != nil {
+		return -1, err
 	}
 	return parseInt, nil
 }

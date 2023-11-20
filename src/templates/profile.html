@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
 {% block cont %}
+<form action="/create-chat" method="post" enctype="application/x-www-form-urlencoded" id="new-msg-form" class="new-msg-form new-msg-form-hidden">
+    <textarea name="msg"></textarea>
+    <input type="hidden" name="chatId" value="{{ isChatExist }}">
+    <input type="hidden" name="userId" value="{{ user.Id }}">
+    <button>
+        <a>Send</a>
+    </button>
+</form>
 <div class="profile-wrap">
     <div class="profile-left-side">
         {% if user.Avatar %}
@@ -65,7 +73,7 @@
                         </button>
                     </form>
                 {% endif %}
-            <button class="profile-button-message">
+            <button id="profile-button-message" data-chatId="{{ isChatExist }}" class="profile-button-message">
                 <a><img src="/static/img/message.svg">Message</a>
             </button>
             {% endif %}
@@ -217,6 +225,13 @@
     </div>
 </div>
 <script>
-
+    document.getElementById("profile-button-message").onclick = function (){
+        let id = this.getAttribute("data-chatId");
+        if (id !== "-1"){
+            window.location.href = "http://localhost:8000/chat/" + id
+        } else {
+            document.getElementById("new-msg-form").classList.toggle("new-msg-form-hidden");
+        }
+    }
 </script>
 {% endblock cont %}

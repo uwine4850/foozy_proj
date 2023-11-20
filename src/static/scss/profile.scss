@@ -172,3 +172,40 @@
   }
 }
 
+.new-msg-form{
+  position: absolute;
+  top: 20%;
+  left: calc(50% - 250px);
+  z-index: 100;
+  width: 600px;
+  padding: 10px;
+  box-sizing: border-box;
+  background: $primaryBgColor;
+  display: flex;
+  flex-direction: column;
+  border-radius: 3px;
+  textarea{
+    width: 100%;
+    box-sizing: border-box;
+    resize: none;
+    border-radius: 3px;
+    height: 150px;
+    border: none;
+    outline: none;
+    padding: 10px;
+    background-color: $secondaryColor;
+    font-size: 16px;
+    overflow-y: scroll;
+  }
+  button{
+    margin-left: auto;
+    margin-top: 10px;
+    @include linkButton(#862E2E, rgba(0, 0, 0, 0.2));
+    height: 30px;
+    width: 80px;
+  }
+}
+
+.new-msg-form-hidden{
+  display: none;
+}
