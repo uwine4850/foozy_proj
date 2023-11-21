@@ -52,7 +52,7 @@ func loadChatMsg(chatId int, db interfaces.IDatabase) {
 	}, "AND"), 0)
 }
 
-type chatMessage struct {
+type ChatMessage struct {
 	Id     string `db:"id"`
 	UserId string `db:"user"`
 	Text   string `db:"text"`
@@ -106,9 +106,9 @@ func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) f
 	if messages.Error != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
-	var chatMessages []chatMessage
+	var chatMessages []ChatMessage
 	for i := 0; i < len(messages.Res); i++ {
-		var cm chatMessage
+		var cm ChatMessage
 		err := dbutils.FillStructFromDb(messages.Res[i], &cm)
 		if err != nil {
 			return func() { router.ServerError(w, err.Error()) }
