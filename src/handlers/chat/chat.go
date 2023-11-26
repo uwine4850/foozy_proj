@@ -47,9 +47,8 @@ func getChatUser(chatDb map[string]interface{}, uid int, db interfaces.IDatabase
 }
 
 func loadChatMsg(chatId int, db interfaces.IDatabase) {
-	db.AsyncQ().AsyncSelect("messages", []string{"*"}, "chat_msg", dbutils.WHEquals(map[string]interface{}{
-		"chat": chatId,
-	}, "AND"), 0)
+	db.AsyncQ().AsyncQuery("messages", "SELECT * FROM (SELECT * FROM `chat_msg` WHERE chat = ? "+
+		"ORDER BY id DESC LIMIT 1) AS f ORDER BY id ASC;", chatId)
 }
 
 type ChatMessage struct {
@@ -117,7 +116,7 @@ func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) f
 	}
 
 	manager.SetTemplatePath("src/templates/chat.html")
-	manager.SetContext(map[string]interface{}{"user": userData, "messages": chatMessages})
+	manager.SetContext(map[string]interface{}{"user": userData, "messages": chatMessages, "chatId": chatId})
 	err = manager.RenderTemplate(w, r)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }

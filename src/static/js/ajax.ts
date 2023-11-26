@@ -40,3 +40,18 @@ export class Ajax{
         });
     }
 }
+
+export function ajaxGET(url: string, data: object, onSuccess: (response) => void, onError: (error) => void){
+    $.ajax({
+        url: url,
+        method: 'GET',
+        data: data,
+        json: true,
+        success: function(response) {
+            onSuccess(response);
+        },
+        error: function(xhr, status, error) {
+            onError(error);
+        }
+    });
+}
