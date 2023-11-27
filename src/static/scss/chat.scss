@@ -58,6 +58,7 @@
     padding: 10px;
     display: flex;
     flex-direction: column;
+    position: relative;
     &:first-child{
       margin-top: auto;
     }
@@ -69,6 +70,18 @@
       font-size: 14px;
       color: #858585;
     }
+    .chat-msg-not-read-my{
+      width: 10px;
+      height: 10px;
+      border-radius: 100%;
+      background: $darkBlue;
+      position: absolute;
+      left: -20px;
+      top: 45%;
+    }
+  }
+  .chat-msg-not-read{
+    background-color: $darkBlue;
   }
   .chat-content-msg-my-msg{
     margin-left: auto;
@@ -112,16 +125,3 @@
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -56,6 +56,7 @@ type ChatMessage struct {
 	UserId string `db:"user"`
 	Text   string `db:"text"`
 	Date   string `db:"date"`
+	IsRead string `db:"is_read"`
 }
 
 func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {

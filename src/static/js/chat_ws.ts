@@ -1,52 +1,82 @@
-enum MsgType{
+import {observeMessages} from "./observe_messages";
+import {runLazyLoadMsg} from "./lazy_load_msg";
+
+export enum MsgType{
     Connect,
-    TextMsg
+    TextMsg,
+    ReadMsg,
+    Error
 }
 
-interface TextMsg{
-    Text: string;
-}
-
-interface Msg {
+export interface Msg {
     Type: number;
     Uid: string;
     ChatId: string;
-    Msg: TextMsg;
+    Msg: Record<string, string>;
 }
 
-let uid: string;
-let chatId: string;
+export interface ConnectData{
+    Socket: WebSocket;
+    Uid: string;
+    ChatId: string;
+}
 
-export function RunWs(){
+let connectData: ConnectData = {
+    Socket: null,
+    Uid: null,
+    ChatId: null
+}
+
+export function RunWs(): ConnectData{
     let area = document.getElementById("chat-textarea") as HTMLTextAreaElement;
     const socket = new WebSocket("ws://localhost:8000/chat-ws");
+    connectData.Socket = socket;
     socket.addEventListener("open", (event) => {
         console.log("Connect.");
     });
 
     socket.addEventListener("message", (event) => {
+        if (event.data == ""){
+            return
+        }
         const msg: Msg = JSON.parse(event.data);
         switch (msg.Type){
+            case MsgType.Error:
+                console.log(msg.Msg.Error)
+                break;
             case MsgType.TextMsg:
-                if (msg.Uid == uid){
-                    document.getElementById("chat-content").innerHTML += ` <div class="chat-content-msg chat-content-msg-my-msg">
-                        <div class="chat-content-msg-text">
-                            ${msg.Msg.Text}
-                        </div>
-                        <div class="chat-content-msg-date">1/22/3333</div>
-                    </div>`;
+                const chat_content = document.getElementById("chat-content");
+                let classes = ""
+                let notReadMy = ""
+                if (msg.Uid == connectData.Uid){
+                    classes = "chat-content-msg-my-msg";
+                    notReadMy = '<div class="chat-msg-not-read-my"></div>'
                 } else {
-                    document.getElementById("chat-content").innerHTML += ` <div class="chat-content-msg">
+                    classes = "chat-msg-not-read chat-msg-not-read-obs";
+                }
+                chat_content.innerHTML += ` 
+                    <div data-msgid="${msg.Msg.Id}" class="chat-content-msg ${classes}">
+                        ${notReadMy}
                         <div class="chat-content-msg-text">
                             ${msg.Msg.Text}
                         </div>
-                        <div class="chat-content-msg-date">1/22/3333</div>
+                        <div class="chat-content-msg-date">${msg.Msg.Date}</div>
                     </div>`;
-                }
+                observeMessages(connectData);
+                runLazyLoadMsg(connectData);
                break;
             case MsgType.Connect:
-                uid = msg.Uid;
-                chatId = msg.ChatId;
+                connectData.Uid = msg.Uid;
+                connectData.ChatId = msg.ChatId;
+                break;
+            case MsgType.ReadMsg:
+                const element = document.querySelector(`[data-msgid="${msg.Msg.Id}"]`);
+                if (element.classList.contains("chat-content-msg-my-msg") && element.querySelectorAll(".chat-msg-not-read-my").length > 0){
+                    element.querySelectorAll(".chat-msg-not-read-my")[0].remove();
+                }
+                if (element.classList.contains("chat-msg-not-read")){
+                    element.classList.remove("chat-msg-not-read");
+                }
                 break;
         }
     });
@@ -62,13 +92,12 @@ export function RunWs(){
     document.getElementById("send").onclick = function () {
         let m: Msg = {
             Type: MsgType.TextMsg,
-            Uid: uid,
-            ChatId: chatId,
-            Msg: {
-                Text: area.value,
-            }
+            Uid: connectData.Uid,
+            ChatId: connectData.ChatId,
+            Msg: {"Text": area.value}
         }
         socket.send(JSON.stringify(m));
         area.value = "";
     }
+    return connectData;
 }

@@ -1,17 +1,5 @@
 import {ajaxGET} from "./ajax";
 
-export function handleIntersection(entries: IntersectionObserverEntry[], observer: IntersectionObserver) {
-    entries.forEach(entry => {
-        // Проверяем, пересек ли элемент
-        if (entry.isIntersecting) {
-            console.log('Элемент появился на экране:', entry.target);
-            // Дальнейшие действия при появлении элемента на экране
-            // Например, можно удалить наблюдение за элементом:
-            observer.unobserve(entry.target);
-        }
-    });
-}
-
 export class LazyLoad{
     private obsElementId: string;
     private dataFields: string[];
@@ -58,11 +46,7 @@ export class LazyLoad{
                     }, 100);
                 }
             });
-        }, {
-            root: null,
-            threshold: 0.5,
-        });
-
+        }, this.options);
         observer.observe(obsElement);
     }
 }
