@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/websocket"
-	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router"
@@ -101,12 +100,12 @@ func ChatWs(w http.ResponseWriter, r *http.Request, manager interfaces.IManager)
 		if err != nil {
 			msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
 		}
-		defer func(db *database.Database) {
-			err := db.Close()
-			if err != nil {
-				panic(err)
-			}
-		}(db)
+		//defer func(db *database.Database) {
+		//	err := db.Close()
+		//	if err != nil {
+		//		panic(err)
+		//	}
+		//}(db)
 		switch msg.Type {
 		case TypeTextMsg:
 			if msg.Msg["Text"] == "" {
@@ -160,6 +159,10 @@ func ChatWs(w http.ResponseWriter, r *http.Request, manager interfaces.IManager)
 			if err != nil {
 				panic(err)
 			}
+		}
+		err = db.Close()
+		if err != nil {
+			panic(err)
 		}
 		for i := 0; i < len(chatConnections[msg.ChatId]); i++ {
 			if msgJson == "" {

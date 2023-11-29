@@ -4,7 +4,7 @@ import {Ajax} from "./ajax";
 import {RunWs} from "./chat_ws";
 import {LazyLoad} from "./lazy_load";
 import {observeMessages} from "./observe_messages";
-import {runLazyLoadMsg} from "./lazy_load_msg";
+import {runLazyLoadMsg, runLazyLoadNotReadMsg} from "./lazy_load_msg";
 
 runIfExist(document.getElementById("header-user"), function (el) {
     el.onclick = function (){
@@ -48,4 +48,5 @@ const regex = /^\/chat\/\d+$/;
 if (regex.test(window.location.pathname)){
     let connectData = RunWs();
     runLazyLoadMsg(connectData);
+    runLazyLoadNotReadMsg(connectData);
 }

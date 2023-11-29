@@ -1,5 +1,5 @@
 import {observeMessages} from "./observe_messages";
-import {runLazyLoadMsg} from "./lazy_load_msg";
+import {runLazyLoadMsg, runLazyLoadNotReadMsg} from "./lazy_load_msg";
 
 export enum MsgType{
     Connect,
@@ -64,6 +64,7 @@ export function RunWs(): ConnectData{
                     </div>`;
                 observeMessages(connectData);
                 runLazyLoadMsg(connectData);
+                runLazyLoadNotReadMsg(connectData);
                break;
             case MsgType.Connect:
                 connectData.Uid = msg.Uid;

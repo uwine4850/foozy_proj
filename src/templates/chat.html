@@ -17,7 +17,7 @@
     <div class="chat-content" id="chat-content">
         {% for msg in messages %}
             {% if msg.UserId != user.Id %}
-                <div data-chatid="{{ chatId }}" data-msgid="{{ msg.Id }}" id="last-msg" class="chat-content-msg chat-content-msg-my-msg">
+                <div data-first="1" data-msgtype="read" data-chatid="{{ chatId }}" data-msgid="{{ msg.Id }}" id="last-msg" class="chat-content-msg chat-content-msg-my-msg last-msg">
                     {% if msg.IsRead == "0" %}
                     <div class="chat-msg-not-read-my"></div>
                     {% endif %}
@@ -28,9 +28,9 @@
                 </div>
             {% else %}
                 {% if msg.IsRead == "1" %}
-                     <div data-uid="{{ uid }}" data-chatId="{{ chatId }}" data-msgId="{{ msg.Id }}" id="last-msg" class="chat-content-msg">
+                     <div data-first="1" data-msgtype="read" data-uid="{{ uid }}" data-chatId="{{ chatId }}" data-msgId="{{ msg.Id }}" id="last-msg" class="chat-content-msg last-msg">
                 {% else %}
-                    <div data-uid="{{ uid }}" data-chatId="{{ chatId }}" data-msgId="{{ msg.Id }}" id="last-msg" class="chat-content-msg chat-msg-not-read chat-msg-not-read-obs">
+                    <div data-first="1" data-msgtype="notread" data-uid="{{ uid }}" data-chatId="{{ chatId }}" data-msgId="{{ msg.Id }}" id="last-msg" class="chat-content-msg chat-msg-not-read chat-msg-not-read-obs chat-msg-not-read-obs-down last-msg">
                 {% endif %}
                     <div class="chat-content-msg-text">
                         {{ msg.Text }}
