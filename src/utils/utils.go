@@ -34,3 +34,13 @@ func ParseForm(r *http.Request) (*form.Form, error) {
 	}
 	return frm, nil
 }
+
+func RemoveElement[T comparable](slice []T, element T) []T {
+	var result []T
+	for _, el := range slice {
+		if el != element {
+			result = append(result, el)
+		}
+	}
+	return result
+}

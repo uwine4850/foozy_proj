@@ -62,7 +62,6 @@ func main() {
 	newRouter.Post("/create-chat", chat.CreateChatPost)
 	newRouter.Ws("/chat-ws", router.NewWebsocket(router.Upgrader), chat.ChatWs)
 	newRouter.Get("/load-messages", chat.LoadMessages)
-	newRouter.Get("/load-not-read-messages", chat.LoadNotReadMessages)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
 	newRouter.GetMux().Handle("/media/", http.StripPrefix("/media/", http.FileServer(http.Dir("media"))))
 	server := server2.NewServer(":8000", newRouter)

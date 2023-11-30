@@ -2,8 +2,6 @@ import '../scss/style.scss';
 import {runIfExist} from "./utils";
 import {Ajax} from "./ajax";
 import {RunWs} from "./chat_ws";
-import {LazyLoad} from "./lazy_load";
-import {observeMessages} from "./observe_messages";
 import {runLazyLoadMsg, runLazyLoadNotReadMsg} from "./lazy_load_msg";
 
 runIfExist(document.getElementById("header-user"), function (el) {

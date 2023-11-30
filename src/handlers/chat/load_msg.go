@@ -49,11 +49,13 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		return func() { error = "Permission dined" }
 	}
 
-	// Load messages form database
-	var messages []map[string]interface{}
+	// If this is the first message the message type will be equal to the message type.
+	// This is done to start loading both read and unread messages.
 	if first == "1" {
 		_type = handler
 	}
+	// Load messages form database
+	var messages []map[string]interface{}
 	switch _type {
 	case "read":
 		_messages, err := db.SyncQ().Query("SELECT * FROM `chat_msg` WHERE chat = ? AND id < ? "+
@@ -72,6 +74,7 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		}
 		messages = _messages
 	}
+	// Filling the []ChatMessage slice with message data.
 	var chatMessages []ChatMessage
 	for i := 0; i < len(messages); i++ {
 		var m ChatMessage

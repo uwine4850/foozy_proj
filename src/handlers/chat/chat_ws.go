@@ -8,6 +8,7 @@ import (
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router"
 	"github.com/uwine4850/foozy_proj/src/conf"
+	"github.com/uwine4850/foozy_proj/src/utils"
 	"net/http"
 	"sync"
 	"time"
@@ -27,30 +28,6 @@ type Msg struct {
 	Msg    map[string]string
 }
 
-func newMsgJson(_type int, uid string, chatId string, msg map[string]string) (string, error) {
-	m := Msg{
-		Type:   _type,
-		Uid:    uid,
-		ChatId: chatId,
-		Msg:    msg,
-	}
-	marshal, err := json.Marshal(m)
-	if err != nil {
-		return "", err
-	}
-	return string(marshal), nil
-}
-
-func removeElement[T comparable](slice []T, element T) []T {
-	var result []T
-	for _, el := range slice {
-		if el != element {
-			result = append(result, el)
-		}
-	}
-	return result
-}
-
 var chatConnections = make(map[string][]*websocket.Conn)
 var connections = make(map[*websocket.Conn]string)
 
@@ -64,13 +41,27 @@ func ChatWs(w http.ResponseWriter, r *http.Request, manager interfaces.IManager)
 	ws := manager.GetWebSocket()
 	ws.OnClientClose(func(conn *websocket.Conn) {
 		connChatId := connections[conn]
-		chatConnections[connChatId] = removeElement(chatConnections[connChatId], conn)
+		chatConnections[connChatId] = utils.RemoveElement(chatConnections[connChatId], conn)
 		err := conn.Close()
 		if err != nil {
 			panic(err)
 		}
 	})
-	ws.OnConnect(func(conn *websocket.Conn) {
+	ws.OnConnect(onConnect(r, ws, chatId))
+	ws.OnMessage(onMessage(ws, &mu))
+	err := ws.ReceiveMessages(w, r)
+	if err != nil {
+		panic(err)
+	}
+	return func() {}
+}
+
+// onConnect the function is executed when a new user joins the chat room.
+// The variable chatConnections records information about the chat and the users who are members of it, for example, chatId = conn.
+// The connections slice contains information about each connection and its chat, for example, conn = chatId.
+// After all this, a message is sent to the client.
+func onConnect(r *http.Request, ws interfaces.IWebsocket, chatId string) func(conn *websocket.Conn) {
+	return func(conn *websocket.Conn) {
 		connections[conn] = chatId
 		chatConnections[chatId] = append(chatConnections[chatId], conn)
 		uid, err := r.Cookie("UID")
@@ -85,85 +76,41 @@ func ChatWs(w http.ResponseWriter, r *http.Request, manager interfaces.IManager)
 		if err != nil {
 			panic(err)
 		}
-	})
-	ws.OnMessage(func(messageType int, msgData []byte, conn *websocket.Conn) {
+	}
+}
+
+// onMessage processes messages from the user.
+// Determines the type of message and then calls the appropriate handler.
+// After processing, sends the message data back to the client.
+func onMessage(ws interfaces.IWebsocket, mu *sync.Mutex) func(messageType int, msgData []byte, conn *websocket.Conn) {
+	return func(messageType int, msgData []byte, conn *websocket.Conn) {
 		mu.Lock()
 		defer mu.Unlock()
 		var msg Msg
 		var msgJson string
 		err := json.Unmarshal(msgData, &msg)
 		if err != nil {
-			panic(err)
+			msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+			return
 		}
 		db := conf.DatabaseI
 		err = db.Connect()
 		if err != nil {
 			msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+			return
 		}
-		//defer func(db *database.Database) {
-		//	err := db.Close()
-		//	if err != nil {
-		//		panic(err)
-		//	}
-		//}(db)
 		switch msg.Type {
 		case TypeTextMsg:
-			if msg.Msg["Text"] == "" {
-				return
-			}
-			//db := conf.DatabaseI
-			//err := db.Connect()
-			//if err != nil {
-			//	msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
-			//	break
-			//}
-			newMsgData := map[string]interface{}{
-				"user":    msg.Uid,
-				"chat":    msg.ChatId,
-				"text":    msg.Msg["Text"],
-				"date":    time.Now(),
-				"is_read": false,
-			}
-			_, err = db.SyncQ().Insert("chat_msg", newMsgData)
-			if err != nil {
-				msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
-				break
-			}
-			newMsg, err := getNewMsg(db, newMsgData)
-			if err != nil {
-				msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
-				break
-			}
-			//err = db.Close()
-			//if err != nil {
-			//	msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
-			//	break
-			//}
-			msgJson, err = newMsgJson(msg.Type, msg.Uid, msg.ChatId, newMsg)
-			if err != nil {
-				msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
-				break
-			}
+			handleTypeTextMsg(msg, db, &msgJson)
 		case TypeReadMsg:
-			_, err := db.SyncQ().Update("chat_msg", []dbutils.DbEquals{
-				{
-					Name:  "is_read",
-					Value: true,
-				},
-			}, dbutils.WHEquals(map[string]interface{}{"id": msg.Msg["Id"]}, "AND"))
-			if err != nil {
-				msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
-				break
-			}
-			msgJson, err = newMsgJson(msg.Type, msg.Uid, msg.ChatId, msg.Msg)
-			if err != nil {
-				panic(err)
-			}
+			handleTypeReadMsg(msg, db, &msgJson)
 		}
 		err = db.Close()
 		if err != nil {
-			panic(err)
+			msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+			return
 		}
+		// Sending a message to a specific chat room.
 		for i := 0; i < len(chatConnections[msg.ChatId]); i++ {
 			if msgJson == "" {
 				return
@@ -173,14 +120,61 @@ func ChatWs(w http.ResponseWriter, r *http.Request, manager interfaces.IManager)
 				panic(err)
 			}
 		}
-	})
-	err := ws.ReceiveMessages(w, r)
-	if err != nil {
-		panic(err)
 	}
-	return func() {}
 }
 
+// handleTypeTextMsg processing a message sent to the chat room.
+// The message is saved to the database, then parsed and sent back to the client.
+func handleTypeTextMsg(msg Msg, db interfaces.IDatabase, msgJson *string) {
+	if msg.Msg["Text"] == "" {
+		return
+	}
+	newMsgData := map[string]interface{}{
+		"user":    msg.Uid,
+		"chat":    msg.ChatId,
+		"text":    msg.Msg["Text"],
+		"date":    time.Now(),
+		"is_read": false,
+	}
+	_, err := db.SyncQ().Insert("chat_msg", newMsgData)
+	if err != nil {
+		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+		return
+	}
+	newMsg, err := getNewMsg(db, newMsgData)
+	if err != nil {
+		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+		return
+	}
+	*msgJson, err = newMsgJson(msg.Type, msg.Uid, msg.ChatId, newMsg)
+	if err != nil {
+		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+		return
+	}
+}
+
+// handleTypeReadMsg processing a message read by a user.
+// Changes in the database of message status to "read".
+// Sending data about the message to the client.
+func handleTypeReadMsg(msg Msg, db interfaces.IDatabase, msgJson *string) {
+	_, err := db.SyncQ().Update("chat_msg", []dbutils.DbEquals{
+		{
+			Name:  "is_read",
+			Value: true,
+		},
+	}, dbutils.WHEquals(map[string]interface{}{"id": msg.Msg["Id"]}, "AND"))
+	if err != nil {
+		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+		return
+	}
+	*msgJson, err = newMsgJson(msg.Type, msg.Uid, msg.ChatId, msg.Msg)
+	if err != nil {
+		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+		return
+	}
+}
+
+// getNewMsg retrieves the last saved message in the database.
 func getNewMsg(db interfaces.IDatabase, msgData map[string]interface{}) (map[string]string, error) {
 	delete(msgData, "date")
 	equals := dbutils.WHEquals(msgData, "AND")
@@ -201,10 +195,26 @@ func getNewMsg(db interfaces.IDatabase, msgData map[string]interface{}) (map[str
 	return msgMap, nil
 }
 
+// wsError sending the error to the client.
 func wsError(uid string, chatId string, error string) string {
 	msgJson, err := newMsgJson(TypeError, uid, chatId, map[string]string{"Error": error})
 	if err != nil {
 		panic(err)
 	}
 	return msgJson
+}
+
+// newMsgJson sending a response to the client in json format.
+func newMsgJson(_type int, uid string, chatId string, msg map[string]string) (string, error) {
+	m := Msg{
+		Type:   _type,
+		Uid:    uid,
+		ChatId: chatId,
+		Msg:    msg,
+	}
+	marshal, err := json.Marshal(m)
+	if err != nil {
+		return "", err
+	}
+	return string(marshal), nil
 }

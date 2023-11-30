@@ -10,7 +10,8 @@ import (
 	"strconv"
 )
 
-func getChatDb(id int, db interfaces.IDatabase) (map[string]interface{}, error) {
+// getChatData Returns data from the database about a specific chat.
+func getChatData(id int, db interfaces.IDatabase) (map[string]interface{}, error) {
 	chat, err := db.SyncQ().Select([]string{"*"}, "chat", dbutils.WHEquals(map[string]interface{}{
 		"id": id,
 	}, "AND"), 1)
@@ -20,6 +21,7 @@ func getChatDb(id int, db interfaces.IDatabase) (map[string]interface{}, error) 
 	return chat[0], nil
 }
 
+// getChatUser Returns user data from the database.
 func getChatUser(chatDb map[string]interface{}, uid int, db interfaces.IDatabase) (map[string]interface{}, error) {
 	user1, err := dbutils.ParseInt(chatDb["user1"])
 	if err != nil {
@@ -46,6 +48,9 @@ func getChatUser(chatDb map[string]interface{}, uid int, db interfaces.IDatabase
 	return dbUser[0], nil
 }
 
+// loadChatMsg Loads a single message from the database.
+// If there are no read messages - returns the oldest message.
+// If all messages are read - returns the most recent message.
 func loadChatMsg(chatId int, userData profile.UserData, db interfaces.IDatabase) (map[string]interface{}, error) {
 	notReadMessage, err := db.SyncQ().Select([]string{"*"}, "chat_msg", dbutils.WHEquals(map[string]interface{}{
 		"user":    userData.Id,
@@ -61,8 +66,14 @@ func loadChatMsg(chatId int, userData profile.UserData, db interfaces.IDatabase)
 		if err != nil {
 			return nil, err
 		}
+		if message == nil {
+			return nil, nil
+		}
 		return message[0], nil
 	} else {
+		if notReadMessage == nil {
+			return nil, nil
+		}
 		return notReadMessage[0], nil
 	}
 }
@@ -99,7 +110,7 @@ func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) f
 	}
 	defer db.Close()
 
-	chatDb, err := getChatDb(chatIdInt, db)
+	chatDb, err := getChatData(chatIdInt, db)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
@@ -120,11 +131,13 @@ func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) f
 	}
 	var chatMessages []ChatMessage
 	var cm ChatMessage
-	err = dbutils.FillStructFromDb(msg, &cm)
-	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
+	if msg != nil {
+		err = dbutils.FillStructFromDb(msg, &cm)
+		if err != nil {
+			return func() { router.ServerError(w, err.Error()) }
+		}
+		chatMessages = append(chatMessages, cm)
 	}
-	chatMessages = append(chatMessages, cm)
 	manager.SetTemplatePath("src/templates/chat.html")
 	manager.SetContext(map[string]interface{}{"user": userData, "messages": chatMessages, "chatId": chatId})
 	err = manager.RenderTemplate(w, r)
