@@ -137,9 +137,11 @@ func setChatLastMsg(chats []chat, _chatInfo *[]chatInfo, db interfaces.IDatabase
 			return res.Error
 		}
 		var chatMsg ChatMessage
-		err := dbutils.FillStructFromDb(res.Res[0], &chatMsg)
-		if err != nil {
-			return err
+		if res.Res != nil {
+			err := dbutils.FillStructFromDb(res.Res[0], &chatMsg)
+			if err != nil {
+				return err
+			}
 		}
 		(*_chatInfo)[i].LastMsg = chatMsg
 	}
