@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/websocket"
+	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router"
@@ -125,7 +126,7 @@ func onMessage(ws interfaces.IWebsocket, mu *sync.Mutex) func(messageType int, m
 
 // handleTypeTextMsg processing a message sent to the chat room.
 // The message is saved to the database, then parsed and sent back to the client.
-func handleTypeTextMsg(msg Msg, db interfaces.IDatabase, msgJson *string) {
+func handleTypeTextMsg(msg Msg, db *database.Database, msgJson *string) {
 	if msg.Msg["Text"] == "" {
 		return
 	}
@@ -156,7 +157,7 @@ func handleTypeTextMsg(msg Msg, db interfaces.IDatabase, msgJson *string) {
 // handleTypeReadMsg processing a message read by a user.
 // Changes in the database of message status to "read".
 // Sending data about the message to the client.
-func handleTypeReadMsg(msg Msg, db interfaces.IDatabase, msgJson *string) {
+func handleTypeReadMsg(msg Msg, db *database.Database, msgJson *string) {
 	_, err := db.SyncQ().Update("chat_msg", []dbutils.DbEquals{
 		{
 			Name:  "is_read",
@@ -175,7 +176,7 @@ func handleTypeReadMsg(msg Msg, db interfaces.IDatabase, msgJson *string) {
 }
 
 // getNewMsg retrieves the last saved message in the database.
-func getNewMsg(db interfaces.IDatabase, msgData map[string]interface{}) (map[string]string, error) {
+func getNewMsg(db *database.Database, msgData map[string]interface{}) (map[string]string, error) {
 	delete(msgData, "date")
 	equals := dbutils.WHEquals(msgData, "AND")
 	equals.QueryStr += " ORDER BY Id DESC "

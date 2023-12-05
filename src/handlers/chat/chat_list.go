@@ -83,7 +83,7 @@ func ChatList(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 }
 
 // getChatListUsers Sets the user information for each instance of the chatInfo structure.
-func getChatListUsers(chats []chat, uid string, _chatInfo *[]chatInfo, db interfaces.IDatabase) error {
+func getChatListUsers(chats []chat, uid string, _chatInfo *[]chatInfo, db *database.Database) error {
 	var asyncKeys []string
 	for i := 0; i < len(chats); i++ {
 		var currentChatUserId string
@@ -118,7 +118,7 @@ func getChatListUsers(chats []chat, uid string, _chatInfo *[]chatInfo, db interf
 
 // setChatLastMsg Sets the last message in the chatInfo structure.
 // For each chat, an asynchronous request is sent to the database to retrieve the last message.
-func setChatLastMsg(chats []chat, _chatInfo *[]chatInfo, db interfaces.IDatabase) error {
+func setChatLastMsg(chats []chat, _chatInfo *[]chatInfo, db *database.Database) error {
 	var asyncKeys []string
 	for i := 0; i < len(chats); i++ {
 		db.AsyncQ().AsyncSelect("msg"+chats[i].Id, []string{"*"}, "chat_msg", dbutils.WHOutput{

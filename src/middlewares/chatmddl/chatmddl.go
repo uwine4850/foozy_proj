@@ -13,7 +13,7 @@ import (
 	"strconv"
 )
 
-func ChatPermissionMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) {
+func ChatPermissionMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManagerData) {
 	re := regexp.MustCompile(`^/chat/\d+$`)
 	if !re.MatchString(r.URL.Path) {
 		return
@@ -21,8 +21,7 @@ func ChatPermissionMddl(w http.ResponseWriter, r *http.Request, manager interfac
 	uid, err := r.Cookie("UID")
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
-			http.Redirect(w, r, "/home", http.StatusFound)
-			middlewares.SkipNextPage(manager)
+			middlewares.SkipNextPageAndRedirect(manager, w, r, "/home")
 			return
 		}
 		middlewares.SetMddlError(err, manager)

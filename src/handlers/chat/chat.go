@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router"
@@ -11,7 +12,7 @@ import (
 )
 
 // getChatData Returns data from the database about a specific chat.
-func getChatData(id int, db interfaces.IDatabase) (map[string]interface{}, error) {
+func getChatData(id int, db *database.Database) (map[string]interface{}, error) {
 	chat, err := db.SyncQ().Select([]string{"*"}, "chat", dbutils.WHEquals(map[string]interface{}{
 		"id": id,
 	}, "AND"), 1)
@@ -22,7 +23,7 @@ func getChatData(id int, db interfaces.IDatabase) (map[string]interface{}, error
 }
 
 // getChatUser Returns user data from the database.
-func getChatUser(chatDb map[string]interface{}, uid int, db interfaces.IDatabase) (map[string]interface{}, error) {
+func getChatUser(chatDb map[string]interface{}, uid int, db *database.Database) (map[string]interface{}, error) {
 	user1, err := dbutils.ParseInt(chatDb["user1"])
 	if err != nil {
 		return nil, err
@@ -51,7 +52,7 @@ func getChatUser(chatDb map[string]interface{}, uid int, db interfaces.IDatabase
 // loadChatMsg Loads a single message from the database.
 // If there are no read messages - returns the oldest message.
 // If all messages are read - returns the most recent message.
-func loadChatMsg(chatId int, userData profile.UserData, db interfaces.IDatabase) (map[string]interface{}, error) {
+func loadChatMsg(chatId int, userData profile.UserData, db *database.Database) (map[string]interface{}, error) {
 	notReadMessage, err := db.SyncQ().Select([]string{"*"}, "chat_msg", dbutils.WHEquals(map[string]interface{}{
 		"user":    userData.Id,
 		"chat":    chatId,

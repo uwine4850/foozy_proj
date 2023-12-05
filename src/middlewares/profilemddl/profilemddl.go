@@ -8,12 +8,11 @@ import (
 	"net/http"
 )
 
-func AuthMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) {
+func AuthMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManagerData) {
 	if r.URL.Path != "/register" && r.URL.Path != "/sign-in" && r.URL.Path != "/sign-in-post" && r.URL.Path != "/register-post" {
 		uid, err := r.Cookie("UID")
 		if err != nil {
-			http.Redirect(w, r, "/sign-in", http.StatusFound)
-			middlewares.SkipNextPage(manager)
+			middlewares.SkipNextPageAndRedirect(manager, w, r, "/sign-in")
 			return
 		}
 
@@ -38,8 +37,7 @@ func AuthMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 			return
 		}
 		if res == nil {
-			http.Redirect(w, r, "/sign-in", http.StatusFound)
-			middlewares.SkipNextPage(manager)
+			middlewares.SkipNextPageAndRedirect(manager, w, r, "/sign-in")
 			return
 		}
 		manager.SetContext(map[string]interface{}{"UID": uid.Value})

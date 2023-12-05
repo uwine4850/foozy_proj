@@ -72,7 +72,7 @@ func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 	return func() {}
 }
 
-func userIsSubscribe(subscribeUserId any, uid any, db interfaces.IDatabase) (bool, error) {
+func userIsSubscribe(subscribeUserId any, uid any, db *database.Database) (bool, error) {
 	res, err := db.SyncQ().Select([]string{"*"}, "subscribers", dbutils.WHEquals(map[string]interface{}{
 		"subscriber": uid,
 		"profile":    subscribeUserId,
@@ -87,7 +87,7 @@ func userIsSubscribe(subscribeUserId any, uid any, db interfaces.IDatabase) (boo
 	}
 }
 
-func getCountSubscribers(profileId any, db interfaces.IDatabase) (int, error) {
+func getCountSubscribers(profileId any, db *database.Database) (int, error) {
 	count, err := db.SyncQ().Count([]string{"*"}, "subscribers", dbutils.WHEquals(map[string]interface{}{
 		"profile": profileId,
 	}, "AND"), 0)
@@ -101,7 +101,7 @@ func getCountSubscribers(profileId any, db interfaces.IDatabase) (int, error) {
 	return parseInt, nil
 }
 
-func chatExist(id any, uid any, db interfaces.IDatabase) (int, error) {
+func chatExist(id any, uid any, db *database.Database) (int, error) {
 	res, err := db.SyncQ().Select([]string{"*"}, "chat", dbutils.WHOutput{
 		QueryStr:  "user1 = ? AND user2 = ? OR user1 = ? AND user2 = ?",
 		QueryArgs: []interface{}{id, uid, uid, id},
