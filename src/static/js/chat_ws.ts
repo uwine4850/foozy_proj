@@ -1,11 +1,12 @@
 import {observeMessages} from "./observe_messages";
 import {runLazyLoadMsg, runLazyLoadNotReadMsg} from "./lazy_load_msg";
+import {globalIncrementMsgNotification, NotificationConnData} from "./notification_ws";
 
 export enum MsgType{
     Connect,
     TextMsg,
     ReadMsg,
-    Error
+    Error,
 }
 
 export interface Msg {
@@ -27,7 +28,7 @@ let connectData: ConnectData = {
     ChatId: null
 }
 
-export function RunWs(): ConnectData{
+export function RunWs(notification: NotificationConnData): ConnectData{
     let area = document.getElementById("chat-textarea") as HTMLTextAreaElement;
     const socket = new WebSocket("ws://localhost:8000/chat-ws");
     connectData.Socket = socket;
@@ -51,6 +52,7 @@ export function RunWs(): ConnectData{
                 if (msg.Uid == connectData.Uid){
                     classes = "chat-content-msg-my-msg";
                     notReadMy = '<div class="chat-msg-not-read-my"></div>'
+                    sendNotification(msg, notification);
                 } else {
                     classes = "chat-msg-not-read chat-msg-not-read-obs";
                 }
@@ -101,4 +103,10 @@ export function RunWs(): ConnectData{
         area.value = "";
     }
     return connectData;
+}
+
+function sendNotification(msg: Msg, notification: NotificationConnData){
+    if (msg.Msg.GlobalIncrement == "0"){
+        globalIncrementMsgNotification(msg, [msg.Msg.SendToUsersId], notification)
+    }
 }

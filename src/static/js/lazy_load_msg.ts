@@ -82,7 +82,7 @@ export function runLazyLoadNotReadMsg(connectData: ConnectData) {
                     classes: "",
                 }
                 if (i == msg.length-1){
-                    msgData.lastMsgData = `data-chatid="${response["chatId"]}"`;
+                    msgData.lastMsgData += `data-chatid="${response["chatId"]}"`;
                     msgData.classes += "chat-msg-not-read-obs-down";
                 }
                 if (response["uid"] == msg[i].UserId){
@@ -94,7 +94,7 @@ export function runLazyLoadNotReadMsg(connectData: ConnectData) {
                 if (msg[i]["IsRead"] == "0"){
                     msgData.isReadMy = '<div class="chat-msg-not-read-my"></div>';
                 }
-                document.getElementById("chat-content").insertAdjacentHTML('beforeend', getMsgText(msg[0], msgData));
+                document.getElementById("chat-content").insertAdjacentHTML('beforeend', getMsgText(msg[i], msgData));
             }
             observeMessages(connectData)
         } else {

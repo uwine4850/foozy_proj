@@ -5,5 +5,6 @@ sudo docker exec -i mysql mysql --defaults-extra-file=./schema/mysql.cnf < ./sch
 sudo docker exec -i mysql mysql --defaults-extra-file=./schema/mysql.cnf < ./schema/subscribers.sql
 sudo docker exec -i mysql mysql --defaults-extra-file=./schema/mysql.cnf < ./schema/chat.sql
 sudo docker exec -i mysql mysql --defaults-extra-file=./schema/mysql.cnf < ./schema/chat_msg.sql
+sudo docker exec -i mysql mysql --defaults-extra-file=./schema/mysql.cnf < ./schema/chat_msg_count.sql
 
 #sudo docker compose run --rm node npm install

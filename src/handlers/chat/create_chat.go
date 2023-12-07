@@ -69,21 +69,51 @@ func CreateChatPost(w http.ResponseWriter, r *http.Request, manager interfaces.I
 
 	// If a new chat exists, creating the first message and redirecting to the chat page.
 	if chat != nil {
-		parseInt, err := dbutils.ParseInt(chat[0]["id"])
+		chatId, err := dbutils.ParseInt(chat[0]["id"])
 		if err != nil {
 			return func() { router.ServerError(w, err.Error()) }
 		}
+		err = insertMsgCount(chatId, uid.Value, chatF.UserId[0], db)
+		if err != nil {
+			return func() { router.ServerError(w, err.Error()) }
+		}
+		err = IncrementChatMsgCountFromDb(strconv.Itoa(chatId), uid.Value, db)
+		if err != nil {
+			router.ServerError(w, err.Error())
+		}
 		_, err = db.SyncQ().Insert("chat_msg", map[string]interface{}{
-			"user": uid.Value,
-			"chat": parseInt,
-			"text": chatF.MsgText[0],
-			"date": time.Now(),
+			"user":    uid.Value,
+			"chat":    chatId,
+			"text":    chatF.MsgText[0],
+			"date":    time.Now(),
+			"is_read": false,
 		})
 		if err != nil {
 			return func() { router.ServerError(w, err.Error()) }
 		}
-		return func() { http.Redirect(w, r, "/chat/"+strconv.Itoa(parseInt), http.StatusFound) }
+		db.AsyncQ().Wait()
+		inc, _ := db.AsyncQ().LoadAsyncRes("inc")
+		if inc.Error != nil {
+			return func() { router.ServerError(w, inc.Error.Error()) }
+		}
+		return func() { http.Redirect(w, r, "/chat/"+strconv.Itoa(chatId), http.StatusFound) }
 	}
-
 	return func() {}
+}
+
+func insertMsgCount(chatId int, uid1 string, uid2 string, db *database.Database) error {
+	insertData := map[string]interface{}{
+		"chat": chatId,
+	}
+	insertData["user"] = uid1
+	_, err := db.SyncQ().Insert("chat_msg_count", insertData)
+	if err != nil {
+		return err
+	}
+	insertData["user"] = uid2
+	_, err = db.SyncQ().Insert("chat_msg_count", insertData)
+	if err != nil {
+		return err
+	}
+	return nil
 }
