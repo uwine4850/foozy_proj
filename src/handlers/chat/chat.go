@@ -11,42 +11,99 @@ import (
 	"strconv"
 )
 
-// getChatData Returns data from the database about a specific chat.
-func getChatData(id int, db *database.Database) (map[string]interface{}, error) {
-	chat, err := db.SyncQ().Select([]string{"*"}, "chat", dbutils.WHEquals(map[string]interface{}{
-		"id": id,
-	}, "AND"), 1)
-	if err != nil {
-		return nil, err
-	}
-	return chat[0], nil
+type ChatMessage struct {
+	Id     string `db:"id"`
+	UserId string `db:"user"`
+	Text   string `db:"text"`
+	Date   string `db:"date"`
+	IsRead string `db:"is_read"`
 }
 
-// getChatUser Returns user data from the database.
-func getChatUser(chatDb map[string]interface{}, uid int, db *database.Database) (map[string]interface{}, error) {
-	user1, err := dbutils.ParseInt(chatDb["user1"])
+func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
+	chatId, ok := manager.GetSlugParams("id")
+	if !ok {
+		return func() { router.ServerError(w, "Slug parameter id for chat was not found.") }
+	}
+	chatIdInt, err := strconv.Atoi(chatId)
 	if err != nil {
-		return nil, err
+		return func() { router.ServerError(w, err.Error()) }
 	}
-	user2, err := dbutils.ParseInt(chatDb["user2"])
+
+	uid, err := r.Cookie("UID")
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	var dbUid int
-	if user1 == uid {
-		dbUid = user2
-	}
-	if user2 == uid {
-		dbUid = user1
-	}
-	dbUser, err := db.SyncQ().Select([]string{"*"}, "auth", dbutils.WHEquals(map[string]interface{}{
-		"id": dbUid,
-	}, "AND"), 1)
+
+	db := conf.DatabaseI
+	err = db.Connect()
 	if err != nil {
-		return nil, err
+		panic(err)
+		//return func() { router.ServerError(w, err.Error()) }
 	}
-	delete(dbUser[0], "password")
-	return dbUser[0], nil
+	defer db.Close()
+
+	userData, err := GetRecipientUser(chatId, uid.Value, db)
+	if err != nil {
+		return func() { router.ServerError(w, err.Error()) }
+	}
+
+	msg, err := loadChatMsg(chatIdInt, userData, db)
+	if err != nil {
+		return func() { router.ServerError(w, err.Error()) }
+	}
+	var chatMessages []ChatMessage
+	var cm ChatMessage
+	if msg != nil {
+		err = dbutils.FillStructFromDb(msg, &cm)
+		if err != nil {
+			return func() { router.ServerError(w, err.Error()) }
+		}
+		chatMessages = append(chatMessages, cm)
+	}
+	manager.SetTemplatePath("src/templates/chat.html")
+	manager.SetContext(map[string]interface{}{"user": userData, "messages": chatMessages, "chatId": chatId})
+	err = manager.RenderTemplate(w, r)
+	if err != nil {
+		return func() { router.ServerError(w, err.Error()) }
+	}
+	return func() {}
+}
+
+func GetRecipientUser(chatId string, sendUid string, db *database.Database) (profile.UserData, error) {
+	chat, err := db.SyncQ().QB().Select("*", "chat").
+		Where("id", "=", chatId, "AND", "user1", "=", sendUid, "OR", "user2", "=", sendUid).Ex()
+	if err != nil {
+		return profile.UserData{}, err
+	}
+	sendUidInt, err := strconv.Atoi(sendUid)
+	if err != nil {
+		return profile.UserData{}, err
+	}
+	user1, err := dbutils.ParseInt(chat[0]["user1"])
+	if err != nil {
+		return profile.UserData{}, err
+	}
+	user2, err := dbutils.ParseInt(chat[0]["user2"])
+	if err != nil {
+		return profile.UserData{}, err
+	}
+	var recipientId int
+	if user1 == sendUidInt {
+		recipientId = user2
+	}
+	if user2 == sendUidInt {
+		recipientId = user1
+	}
+	user, err := db.SyncQ().QB().Select("*", "auth").Where("id", "=", recipientId).Ex()
+	if err != nil {
+		return profile.UserData{}, err
+	}
+	var recipientUser profile.UserData
+	err = dbutils.FillStructFromDb(user[0], &recipientUser)
+	if err != nil {
+		return profile.UserData{}, err
+	}
+	return recipientUser, nil
 }
 
 // loadChatMsg Loads a single message from the database.
@@ -77,73 +134,4 @@ func loadChatMsg(chatId int, userData profile.UserData, db *database.Database) (
 		}
 		return notReadMessage[0], nil
 	}
-}
-
-type ChatMessage struct {
-	Id     string `db:"id"`
-	UserId string `db:"user"`
-	Text   string `db:"text"`
-	Date   string `db:"date"`
-	IsRead string `db:"is_read"`
-}
-
-func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
-	chatId, ok := manager.GetSlugParams("id")
-	if !ok {
-		return func() { router.ServerError(w, "Slug parameter id for chat was not found.") }
-	}
-	chatIdInt, err := strconv.Atoi(chatId)
-	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
-	}
-
-	uid, err := r.Cookie("UID")
-	if err != nil {
-		panic(err)
-	}
-	uidInt, _ := strconv.Atoi(uid.Value)
-
-	db := conf.DatabaseI
-	err = db.Connect()
-	if err != nil {
-		panic(err)
-		//return func() { router.ServerError(w, err.Error()) }
-	}
-	defer db.Close()
-
-	chatDb, err := getChatData(chatIdInt, db)
-	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
-	}
-
-	user, err := getChatUser(chatDb, uidInt, db)
-	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
-	}
-	var userData profile.UserData
-	err = dbutils.FillStructFromDb(user, &userData)
-	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
-	}
-
-	msg, err := loadChatMsg(chatIdInt, userData, db)
-	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
-	}
-	var chatMessages []ChatMessage
-	var cm ChatMessage
-	if msg != nil {
-		err = dbutils.FillStructFromDb(msg, &cm)
-		if err != nil {
-			return func() { router.ServerError(w, err.Error()) }
-		}
-		chatMessages = append(chatMessages, cm)
-	}
-	manager.SetTemplatePath("src/templates/chat.html")
-	manager.SetContext(map[string]interface{}{"user": userData, "messages": chatMessages, "chatId": chatId})
-	err = manager.RenderTemplate(w, r)
-	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
-	}
-	return func() {}
 }

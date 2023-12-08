@@ -34,13 +34,14 @@ func main() {
 	mddl := middlewares.NewMiddleware()
 	mddl.AsyncHandlerMddl(builtin_mddl.GenerateAndSetCsrf)
 	mddl.AsyncHandlerMddl(chatmddl.ChatPermissionMddl)
+	mddl.HandlerMddl(1, profilemddl.AuthMddl)
 	mddl.HandlerMddl(2, func(w http.ResponseWriter, r *http.Request, manager interfaces.IManagerData) {
 		if utils.SliceContains([]string{"/notification-ws", "/chat-ws", "/load-messages"}, r.URL.Path) {
 			return
 		}
 		uid, err := r.Cookie("UID")
 		if err != nil {
-			panic(err)
+			return
 		}
 		db := conf.DatabaseI
 		err = db.Connect()
@@ -55,7 +56,6 @@ func main() {
 		}
 		manager.SetContext(map[string]interface{}{"msgCount": len(count)})
 	})
-	mddl.HandlerMddl(1, profilemddl.AuthMddl)
 	engine, err := tmlengine.NewTemplateEngine()
 	if err != nil {
 		panic(err)

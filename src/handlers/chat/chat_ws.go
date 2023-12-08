@@ -11,7 +11,6 @@ import (
 	"github.com/uwine4850/foozy_proj/src/conf"
 	"github.com/uwine4850/foozy_proj/src/utils"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -57,6 +56,15 @@ func ChatWs(w http.ResponseWriter, r *http.Request, manager interfaces.IManager)
 		panic(err)
 	}
 	return func() {}
+}
+
+func IncrementChatMsgCountFromDb(chatId string, sendUid string, db *database.Database) error {
+	recipientUser, err := GetRecipientUser(chatId, sendUid, db)
+	if err != nil {
+		return err
+	}
+	db.AsyncQ().AsyncQuery("inc", "UPDATE `chat_msg_count` SET `count`= `count` + 1 WHERE user = ? AND chat = ? ;", recipientUser.Id, chatId)
+	return nil
 }
 
 // onConnect the function is executed when a new user joins the chat room.
@@ -144,7 +152,6 @@ func handleTypeTextMsg(msg Msg, db *database.Database, msgJson *string) {
 		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
 		return
 	}
-	newMsgNotification(msg.ChatId, db)
 	newMsg, err := getNewMsg(db, newMsgData)
 	if err != nil {
 		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
@@ -161,9 +168,9 @@ func handleTypeTextMsg(msg Msg, db *database.Database, msgJson *string) {
 		*msgJson = wsError(msg.Uid, msg.ChatId, inc.Error.Error())
 		return
 	}
-	err = globalIncrementMessage(&newMsg, db)
+	err = newMsgNotification(&newMsg, msg.ChatId, db)
 	if err != nil {
-		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+		*msgJson = wsError(msg.Uid, msg.ChatId, inc.Error.Error())
 		return
 	}
 	err = setNotificationUsers(&newMsg, &msg, db)
@@ -230,50 +237,24 @@ func getNewMsg(db *database.Database, msgData map[string]interface{}) (map[strin
 }
 
 func setNotificationUsers(newMsg *map[string]string, msg *Msg, db *database.Database) error {
-	chat, err := db.SyncQ().Select([]string{"*"}, "chat", dbutils.WHEquals(map[string]interface{}{
-		"id": msg.ChatId,
-	}, "AND"), 1)
+	user, err := GetRecipientUser(msg.ChatId, msg.Uid, db)
 	if err != nil {
 		return err
 	}
-	uidInt, err := strconv.Atoi(msg.Uid)
-	if err != nil {
-		return err
-	}
-	user1, err := dbutils.ParseInt(chat[0]["user1"])
-	if err != nil {
-		return err
-	}
-	user2, err := dbutils.ParseInt(chat[0]["user2"])
-	if err != nil {
-		return err
-	}
-	if user1 != uidInt {
-		(*newMsg)["SendToUsersId"] = strconv.Itoa(user1)
-	}
-	if user2 != uidInt {
-		(*newMsg)["SendToUsersId"] = strconv.Itoa(user2)
-	}
+	(*newMsg)["SendToUsersId"] = user.Id
 	return nil
 }
 
-func newMsgNotification(chatId string, db *database.Database) {
-	db.AsyncQ().AsyncCount("notification", []string{"id"}, "chat_msg", dbutils.WHEquals(map[string]interface{}{
+func newMsgNotification(msg *map[string]string, chatId string, db *database.Database) error {
+	notReadMsgCount, err := db.SyncQ().Count([]string{"id"}, "chat_msg", dbutils.WHEquals(map[string]interface{}{
 		"chat":    chatId,
 		"is_read": false,
 	}, "AND"), 1)
-}
-
-func globalIncrementMessage(msg *map[string]string, db *database.Database) error {
-	res, ok := db.AsyncQ().LoadAsyncRes("notification")
-	(*msg)["GlobalIncrement"] = "1"
-	if !ok {
+	if err != nil {
 		return nil
 	}
-	if res.Error != nil {
-		return res.Error
-	}
-	count, err := dbutils.ParseInt(res.Res[0]["COUNT(id)"])
+	(*msg)["GlobalIncrement"] = "1"
+	count, err := dbutils.ParseInt(notReadMsgCount[0]["COUNT(id)"])
 	if err != nil {
 		return err
 	}
@@ -281,43 +262,6 @@ func globalIncrementMessage(msg *map[string]string, db *database.Database) error
 		(*msg)["GlobalIncrement"] = "0"
 	}
 	return nil
-}
-
-func IncrementChatMsgCountFromDb(chatId string, sendUid string, db *database.Database) error {
-	recipientUid, err := getRecipientUid(chatId, sendUid, db)
-	if err != nil {
-		return err
-	}
-	db.AsyncQ().AsyncQuery("inc", "UPDATE `chat_msg_count` SET `count`= `count` + 1 WHERE user = ? AND chat = ? ;", recipientUid, chatId)
-	return nil
-}
-
-func getRecipientUid(chatId string, sendUid string, db *database.Database) (int, error) {
-	chat, err := db.SyncQ().QB().Select("*", "chat").
-		Where("id", "=", chatId, "AND", "user1", "=", sendUid, "OR", "user2", "=", sendUid).Ex()
-	if err != nil {
-		return 0, err
-	}
-	sendUidInt, err := strconv.Atoi(sendUid)
-	if err != nil {
-		return 0, err
-	}
-	user1, err := dbutils.ParseInt(chat[0]["user1"])
-	if err != nil {
-		return 0, err
-	}
-	user2, err := dbutils.ParseInt(chat[0]["user2"])
-	if err != nil {
-		return 0, err
-	}
-	var recipientId int
-	if user1 == sendUidInt {
-		recipientId = user2
-	}
-	if user2 == sendUidInt {
-		recipientId = user1
-	}
-	return recipientId, nil
 }
 
 // wsError sending the error to the client.
