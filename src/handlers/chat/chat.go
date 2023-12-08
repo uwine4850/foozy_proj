@@ -69,9 +69,19 @@ func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) f
 	return func() {}
 }
 
+type ErrChatNotFound struct {
+}
+
+func (e ErrChatNotFound) Error() string {
+	return "chat not found"
+}
+
 func GetRecipientUser(chatId string, sendUid string, db *database.Database) (profile.UserData, error) {
 	chat, err := db.SyncQ().QB().Select("*", "chat").
 		Where("id", "=", chatId, "AND", "user1", "=", sendUid, "OR", "user2", "=", sendUid).Ex()
+	if chat == nil {
+		return profile.UserData{}, ErrChatNotFound{}
+	}
 	if err != nil {
 		return profile.UserData{}, err
 	}

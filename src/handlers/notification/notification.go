@@ -11,6 +11,7 @@ import (
 const (
 	TypeConnect = iota
 	TypeGlobalIncrementMsg
+	TypeGlobalDecrementMsg
 )
 
 type Notification struct {
@@ -68,11 +69,17 @@ func NotificationWs(w http.ResponseWriter, r *http.Request, manager interfaces.I
 				panic(err)
 			}
 			notificationJson = nj
+		case TypeGlobalDecrementMsg:
+			nj, err := newNotificationJson(notification.Type, notification.Uid, notification.Msg)
+			if err != nil {
+				panic(err)
+			}
+			notificationJson = nj
 		}
 		if notificationJson != "" {
 			for i := 0; i < len(notification.Uid); i++ {
 				uidConn := uidConnections[notification.Uid[i]]
-				if conn != nil {
+				if uidConn != nil {
 					err := ws.SendMessage(messageType, []byte(notificationJson), uidConn)
 					if err != nil {
 						panic(err)

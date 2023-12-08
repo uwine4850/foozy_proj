@@ -168,7 +168,7 @@ func handleTypeTextMsg(msg Msg, db *database.Database, msgJson *string) {
 		*msgJson = wsError(msg.Uid, msg.ChatId, inc.Error.Error())
 		return
 	}
-	err = newMsgNotification(&newMsg, msg.ChatId, db)
+	err = newMsgGlobalIncrementNotification(&newMsg, msg.ChatId, db)
 	if err != nil {
 		*msgJson = wsError(msg.Uid, msg.ChatId, inc.Error.Error())
 		return
@@ -207,12 +207,38 @@ func handleTypeReadMsg(msg Msg, db *database.Database, msgJson *string) {
 		*msgJson = wsError(msg.Uid, msg.ChatId, decMsgCount.Error.Error())
 		return
 	}
-	var err error
+	err := readMsgGlobalDecrementNotification(&msg, db)
+	if err != nil {
+		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+		return
+	}
+	//var err error
 	*msgJson, err = newMsgJson(msg.Type, msg.Uid, msg.ChatId, msg.Msg)
 	if err != nil {
 		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
 		return
 	}
+}
+
+func readMsgGlobalDecrementNotification(msg *Msg, db *database.Database) error {
+	countQuery, err := db.SyncQ().Count([]string{"id"}, "chat_msg", dbutils.WHEquals(map[string]interface{}{
+		"chat":    msg.ChatId,
+		"is_read": false,
+	}, "AND"), 1)
+	if err != nil {
+		return err
+	}
+	count, err := dbutils.ParseInt(countQuery[0]["COUNT(id)"])
+	if err != nil {
+		return err
+	}
+	(*msg).Msg["GlobalDecrement"] = "1"
+	(*msg).Msg["SendToUsersId"] = ""
+	if count == 0 {
+		(*msg).Msg["GlobalDecrement"] = "0"
+		(*msg).Msg["SendToUsersId"] = msg.Uid
+	}
+	return nil
 }
 
 // getNewMsg retrieves the last saved message in the database.
@@ -245,7 +271,7 @@ func setNotificationUsers(newMsg *map[string]string, msg *Msg, db *database.Data
 	return nil
 }
 
-func newMsgNotification(msg *map[string]string, chatId string, db *database.Database) error {
+func newMsgGlobalIncrementNotification(msg *map[string]string, chatId string, db *database.Database) error {
 	notReadMsgCount, err := db.SyncQ().Count([]string{"id"}, "chat_msg", dbutils.WHEquals(map[string]interface{}{
 		"chat":    chatId,
 		"is_read": false,

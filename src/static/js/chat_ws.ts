@@ -1,6 +1,6 @@
 import {observeMessages} from "./observe_messages";
 import {runLazyLoadMsg, runLazyLoadNotReadMsg} from "./lazy_load_msg";
-import {globalIncrementMsgNotification, NotificationConnData} from "./notification_ws";
+import {globalDecrementMsgNotification, globalIncrementMsgNotification, NotificationConnData} from "./notification_ws";
 
 export enum MsgType{
     Connect,
@@ -52,7 +52,7 @@ export function RunWs(notification: NotificationConnData): ConnectData{
                 if (msg.Uid == connectData.Uid){
                     classes = "chat-content-msg-my-msg";
                     notReadMy = '<div class="chat-msg-not-read-my"></div>'
-                    sendNotification(msg, notification);
+                    incrementGlobalMsg(msg, notification);
                 } else {
                     classes = "chat-msg-not-read chat-msg-not-read-obs";
                 }
@@ -79,6 +79,7 @@ export function RunWs(notification: NotificationConnData): ConnectData{
                 }
                 if (element.classList.contains("chat-msg-not-read")){
                     element.classList.remove("chat-msg-not-read");
+                    decrementGlobalMsg(msg, notification)
                 }
                 break;
         }
@@ -105,8 +106,14 @@ export function RunWs(notification: NotificationConnData): ConnectData{
     return connectData;
 }
 
-function sendNotification(msg: Msg, notification: NotificationConnData){
+function incrementGlobalMsg(msg: Msg, notification: NotificationConnData){
     if (msg.Msg.GlobalIncrement == "0"){
         globalIncrementMsgNotification(msg, [msg.Msg.SendToUsersId], notification)
+    }
+}
+
+function decrementGlobalMsg(msg: Msg, notification: NotificationConnData){
+    if (msg.Msg.GlobalDecrement == "0"){
+        globalDecrementMsgNotification(msg, [msg.Msg.SendToUsersId], notification)
     }
 }
