@@ -1,6 +1,11 @@
 import {observeMessages} from "./observe_messages";
 import {runLazyLoadMsg, runLazyLoadNotReadMsg} from "./lazy_load_msg";
-import {globalDecrementMsgNotification, globalIncrementMsgNotification, NotificationConnData} from "./notification_ws";
+import {
+    globalDecrementMsgNotification,
+    globalIncrementMsgNotification,
+    incrementMsgNotification,
+    NotificationConnData
+} from "./notification_ws";
 
 export enum MsgType{
     Connect,
@@ -53,6 +58,7 @@ export function RunWs(notification: NotificationConnData): ConnectData{
                     classes = "chat-content-msg-my-msg";
                     notReadMy = '<div class="chat-msg-not-read-my"></div>'
                     incrementGlobalMsg(msg, notification);
+                    incrementMsg(msg, notification);
                 } else {
                     classes = "chat-msg-not-read chat-msg-not-read-obs";
                 }
@@ -109,6 +115,12 @@ export function RunWs(notification: NotificationConnData): ConnectData{
 function incrementGlobalMsg(msg: Msg, notification: NotificationConnData){
     if (msg.Msg.GlobalIncrement == "0"){
         globalIncrementMsgNotification(msg, [msg.Msg.SendToUsersId], notification)
+    }
+}
+
+function incrementMsg(msg: Msg, notification: NotificationConnData){
+    if (msg.Msg.Increment == "0"){
+        incrementMsgNotification(msg, [msg.Msg.SendToUsersId], notification)
     }
 }
 

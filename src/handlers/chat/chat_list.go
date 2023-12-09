@@ -18,9 +18,10 @@ type chat struct {
 }
 
 type chatInfo struct {
-	Chat    chat
-	User    profile.UserData
-	LastMsg ChatMessage
+	Chat     chat
+	User     profile.UserData
+	LastMsg  ChatMessage
+	MsgCount int
 }
 
 func ChatList(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
@@ -70,6 +71,10 @@ func ChatList(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 	}
 	// Set information about the latest messages.
 	err = setChatLastMsg(chatsStruct, &chatsInfo, db)
+	if err != nil {
+		return func() { router.ServerError(w, err.Error()) }
+	}
+	err = setMsgCount(uid.Value, chatsStruct, &chatsInfo, db)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
@@ -144,6 +149,33 @@ func setChatLastMsg(chats []chat, _chatInfo *[]chatInfo, db *database.Database) 
 			}
 		}
 		(*_chatInfo)[i].LastMsg = chatMsg
+	}
+	return nil
+}
+
+func setMsgCount(uid string, chats []chat, _chatInfo *[]chatInfo, db *database.Database) error {
+	var asyncKeys []string
+	for i := 0; i < len(chats); i++ {
+		db.AsyncQ().AsyncSelect("count"+chats[i].Id, []string{"count"}, "chat_msg_count", dbutils.WHEquals(map[string]interface{}{
+			"chat": chats[i].Id,
+			"user": uid,
+		}, "AND"), 1)
+		asyncKeys = append(asyncKeys, "count"+chats[i].Id)
+	}
+	db.AsyncQ().Wait()
+	for i := 0; i < len(asyncKeys); i++ {
+		res, ok := db.AsyncQ().LoadAsyncRes(asyncKeys[i])
+		if !ok {
+			return errors.New("database output error: the result of the number of messages query was not found")
+		}
+		if res.Error != nil {
+			return res.Error
+		}
+		count, err := dbutils.ParseInt(res.Res[0]["count"])
+		if err != nil {
+			return err
+		}
+		(*_chatInfo)[i].MsgCount = count
 	}
 	return nil
 }

@@ -3,7 +3,7 @@
 {% block cont %}
 <div class="chat-list">
     {% for chatInfo in chatsInfo %}
-    <a href="/chat/{{ chatInfo.Chat.Id }}" class="chat-list-item">
+    <a data-chatid="{{ chatInfo.Chat.Id }}" href="/chat/{{ chatInfo.Chat.Id }}" class="chat-list-item">
         <div class="chat-list-user">
             {% if chatInfo.User.Avatar %}
             <div class="chat-list-user-avatar">
@@ -19,44 +19,8 @@
                 <div class="chat-list-user-msg">{{ chatInfo.LastMsg.Text }}</div>
             </div>
         </div>
-        <div class="chat-list-user-msg-count">11</div>
+        <div id="chat-list-user-msg-count" class="chat-list-user-msg-count">{{ chatInfo.MsgCount }}</div>
     </a>
     {% endfor %}
-<!--    <a href="#" class="chat-list-item">-->
-<!--        <div class="chat-list-user">-->
-<!--            <div class="chat-list-user-avatar">-->
-<!--                <img src="/media/avatars/chengwei-xu-003.jpeg" alt="">-->
-<!--            </div>-->
-<!--            <div class="chat-list-user-data">-->
-<!--                <div class="chat-list-user-username">@renxob</div>-->
-<!--                <div class="chat-list-user-msg">wwfwefwfwfwefwef</div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--        <div class="chat-list-user-msg-count">11</div>-->
-<!--    </a>-->
-<!--    <a href="#" class="chat-list-item">-->
-<!--        <div class="chat-list-user">-->
-<!--            <div class="chat-list-user-avatar">-->
-<!--                <img src="/media/avatars/chengwei-xu-003.jpeg" alt="">-->
-<!--            </div>-->
-<!--            <div class="chat-list-user-data">-->
-<!--                <div class="chat-list-user-username">@renxob</div>-->
-<!--                <div class="chat-list-user-msg">wwfwefwfwfwefwef</div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--        <div class="chat-list-user-msg-count">11</div>-->
-<!--    </a>-->
-<!--    <a href="#" class="chat-list-item">-->
-<!--        <div class="chat-list-user">-->
-<!--            <div class="chat-list-user-avatar">-->
-<!--                <img src="/media/avatars/chengwei-xu-003.jpeg" alt="">-->
-<!--            </div>-->
-<!--            <div class="chat-list-user-data">-->
-<!--                <div class="chat-list-user-username">@renxob</div>-->
-<!--                <div class="chat-list-user-msg">wwfwefwfwfwefwef</div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--        <div class="chat-list-user-msg-count">11</div>-->
-<!--    </a>-->
 </div>
 {% endblock cont %}

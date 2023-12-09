@@ -3,7 +3,8 @@ import {Msg} from "./chat_ws";
 export enum NotificationType{
     Connect,
     GlobalIncrementMsg,
-    GlobalDecrementMsg
+    GlobalDecrementMsg,
+    IncrementMsg,
 }
 
 export interface Notification{
@@ -44,10 +45,21 @@ export function RunNotificationWS(): NotificationConnData{
             case NotificationType.Connect:
                 break;
             case NotificationType.GlobalIncrementMsg:
-                incrementNotificationCount(true)
+                incrementNotificationCount(true);
                 break;
             case NotificationType.GlobalDecrementMsg:
-                incrementNotificationCount(false)
+                incrementNotificationCount(false);
+                break;
+            case NotificationType.IncrementMsg:
+                if (window.location.pathname === "/chat-list"){
+                    const chat = document.querySelector(`[data-chatid="${notification.Msg.ChatId}"]`);
+                    let countEl = chat.querySelector("#chat-list-user-msg-count");
+                    let num = parseInt(countEl.innerHTML);
+                    if (typeof num == "number"){
+                        num++;
+                    }
+                    countEl.innerHTML = String(num);
+                }
         }
     }
     return notificationData
@@ -56,6 +68,15 @@ export function RunNotificationWS(): NotificationConnData{
 export function globalIncrementMsgNotification(msg: Msg, sendToUsersId: string[],  notificationData: NotificationConnData){
     let n: Notification = {
         Type: NotificationType.GlobalIncrementMsg,
+        Uid: sendToUsersId,
+        Msg: {"ChatId": msg.ChatId}
+    }
+    notificationData.Socket.send(JSON.stringify(n));
+}
+
+export function incrementMsgNotification(msg: Msg, sendToUsersId: string[],  notificationData: NotificationConnData){
+    let n: Notification = {
+        Type: NotificationType.IncrementMsg,
         Uid: sendToUsersId,
         Msg: {"ChatId": msg.ChatId}
     }

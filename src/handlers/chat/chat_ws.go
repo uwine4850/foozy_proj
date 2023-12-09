@@ -162,6 +162,7 @@ func handleTypeTextMsg(msg Msg, db *database.Database, msgJson *string) {
 		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
 		return
 	}
+	newMsgIncrementNotification(&newMsg)
 	db.AsyncQ().Wait()
 	inc, _ := db.AsyncQ().LoadAsyncRes("inc")
 	if inc.Error != nil {
@@ -269,6 +270,10 @@ func setNotificationUsers(newMsg *map[string]string, msg *Msg, db *database.Data
 	}
 	(*newMsg)["SendToUsersId"] = user.Id
 	return nil
+}
+
+func newMsgIncrementNotification(msg *map[string]string) {
+	(*msg)["Increment"] = "0"
 }
 
 func newMsgGlobalIncrementNotification(msg *map[string]string, chatId string, db *database.Database) error {
