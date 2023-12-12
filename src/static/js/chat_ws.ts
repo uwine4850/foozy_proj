@@ -1,11 +1,5 @@
 import {observeMessages} from "./observe_messages";
 import {runLazyLoadMsg, runLazyLoadNotReadMsg} from "./lazy_load_msg";
-import {
-    globalDecrementMsgNotification,
-    globalIncrementMsgNotification,
-    incrementMsgNotification,
-    NotificationConnData
-} from "./notification_ws";
 
 export enum MsgType{
     Connect,
@@ -33,7 +27,7 @@ let connectData: ConnectData = {
     ChatId: null
 }
 
-export function RunWs(notification: NotificationConnData): ConnectData{
+export function RunWs(): ConnectData{
     let area = document.getElementById("chat-textarea") as HTMLTextAreaElement;
     const socket = new WebSocket("ws://localhost:8000/chat-ws");
     connectData.Socket = socket;
@@ -57,8 +51,6 @@ export function RunWs(notification: NotificationConnData): ConnectData{
                 if (msg.Uid == connectData.Uid){
                     classes = "chat-content-msg-my-msg";
                     notReadMy = '<div class="chat-msg-not-read-my"></div>'
-                    incrementGlobalMsg(msg, notification);
-                    incrementMsg(msg, notification);
                 } else {
                     classes = "chat-msg-not-read chat-msg-not-read-obs";
                 }
@@ -85,7 +77,6 @@ export function RunWs(notification: NotificationConnData): ConnectData{
                 }
                 if (element.classList.contains("chat-msg-not-read")){
                     element.classList.remove("chat-msg-not-read");
-                    decrementGlobalMsg(msg, notification)
                 }
                 break;
         }
@@ -110,22 +101,4 @@ export function RunWs(notification: NotificationConnData): ConnectData{
         area.value = "";
     }
     return connectData;
-}
-
-function incrementGlobalMsg(msg: Msg, notification: NotificationConnData){
-    if (msg.Msg.GlobalIncrement == "0"){
-        globalIncrementMsgNotification(msg, [msg.Msg.SendToUsersId], notification)
-    }
-}
-
-function incrementMsg(msg: Msg, notification: NotificationConnData){
-    if (msg.Msg.Increment == "0"){
-        incrementMsgNotification(msg, [msg.Msg.SendToUsersId], notification)
-    }
-}
-
-function decrementGlobalMsg(msg: Msg, notification: NotificationConnData){
-    if (msg.Msg.GlobalDecrement == "0"){
-        globalDecrementMsgNotification(msg, [msg.Msg.SendToUsersId], notification)
-    }
 }

@@ -3,7 +3,7 @@ import {runIfExist} from "./utils";
 import {Ajax} from "./ajax";
 import {RunWs} from "./chat_ws";
 import {runLazyLoadMsg, runLazyLoadNotReadMsg} from "./lazy_load_msg";
-import {RunNotificationWS} from "./notification_ws";
+import {RunWsNotification} from "./notification_ws";
 
 runIfExist(document.getElementById("header-user"), function (el) {
     el.onclick = function (){
@@ -44,11 +44,9 @@ subscribeAjax.onSuccess(function (response: string) {
 subscribeAjax.listen()
 
 const regex = /^\/chat\/\d+$/;
-
-
-const notificationData = RunNotificationWS()
+RunWsNotification();
 if (regex.test(window.location.pathname)){
-    let connectData = RunWs(notificationData);
+    let connectData = RunWs();
     runLazyLoadMsg(connectData);
     runLazyLoadNotReadMsg(connectData);
 }

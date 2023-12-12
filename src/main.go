@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/gorilla/websocket"
 	"github.com/uwine4850/foozy/pkg/builtin/builtin_mddl"
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/middlewares"
@@ -17,18 +16,6 @@ import (
 	"github.com/uwine4850/foozy_proj/src/middlewares/profilemddl"
 	"net/http"
 )
-
-var Upgrader1 = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-var Upgrader2 = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
 
 func main() {
 	mddl := middlewares.NewMiddleware()
@@ -62,7 +49,7 @@ func main() {
 	}
 	manager := router.NewManager(engine)
 	newRouter := router.NewRouter(manager)
-	newRouter.EnableLog(true)
+	newRouter.EnableLog(false)
 	newRouter.SetMiddleware(mddl)
 	newRouter.Get("/home", func(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
 		_, ok := manager.GetUserContext("mddl_error")
@@ -97,9 +84,9 @@ func main() {
 	newRouter.Get("/chat/<id>", chat.Chat)
 	newRouter.Get("/chat-list", chat.ChatList)
 	newRouter.Post("/create-chat", chat.CreateChatPost)
-	newRouter.Ws("/chat-ws", router.NewWebsocket(Upgrader1), chat.ChatWs)
+	newRouter.Ws("/chat-ws", router.NewWebsocket(router.Upgrader), chat.WsHandler)
 	newRouter.Get("/load-messages", chat.LoadMessages)
-	newRouter.Ws("/notification-ws", router.NewWebsocket(Upgrader2), notification.NotificationWs)
+	newRouter.Ws("/notification-ws", router.NewWebsocket(router.Upgrader), notification.WsHandler)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
 	newRouter.GetMux().Handle("/media/", http.StripPrefix("/media/", http.FileServer(http.Dir("media"))))
 	server := server2.NewServer(":8000", newRouter)

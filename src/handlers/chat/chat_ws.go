@@ -9,6 +9,7 @@ import (
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router"
 	"github.com/uwine4850/foozy_proj/src/conf"
+	"github.com/uwine4850/foozy_proj/src/handlers/notification"
 	"github.com/uwine4850/foozy_proj/src/utils"
 	"net/http"
 	"sync"
@@ -32,15 +33,14 @@ type Msg struct {
 var chatConnections = make(map[string][]*websocket.Conn)
 var connections = make(map[*websocket.Conn]string)
 
-func ChatWs(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
+func WsHandler(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
 	var mu sync.Mutex
 	chatId, ok := manager.GetSlugParams("id")
 	if !ok {
 		return func() { router.ServerError(w, "Id chat was not found.") }
 	}
-
-	ws := manager.GetWebSocket()
-	ws.OnClientClose(func(conn *websocket.Conn) {
+	ws := manager.CurrentWebsocket()
+	ws.OnClientClose(func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn) {
 		connChatId := connections[conn]
 		chatConnections[connChatId] = utils.RemoveElement(chatConnections[connChatId], conn)
 		delete(connections, conn)
@@ -50,7 +50,7 @@ func ChatWs(w http.ResponseWriter, r *http.Request, manager interfaces.IManager)
 		}
 	})
 	ws.OnConnect(onConnect(r, ws, chatId))
-	ws.OnMessage(onMessage(ws, &mu))
+	ws.OnMessage(onMessage(r, ws, &mu))
 	err := ws.ReceiveMessages(w, r)
 	if err != nil {
 		panic(err)
@@ -58,12 +58,16 @@ func ChatWs(w http.ResponseWriter, r *http.Request, manager interfaces.IManager)
 	return func() {}
 }
 
-func IncrementChatMsgCountFromDb(chatId string, sendUid string, db *database.Database) error {
+func IncrementChatMsgCountFromDb(r *http.Request, chatId string, sendUid string, db *database.Database) error {
 	recipientUser, err := GetRecipientUser(chatId, sendUid, db)
 	if err != nil {
 		return err
 	}
 	db.AsyncQ().AsyncQuery("inc", "UPDATE `chat_msg_count` SET `count`= `count` + 1 WHERE user = ? AND chat = ? ;", recipientUser.Id, chatId)
+	err = notification.SendIncrementMsgChatCount(r, recipientUser.Id, chatId)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -71,8 +75,8 @@ func IncrementChatMsgCountFromDb(chatId string, sendUid string, db *database.Dat
 // The variable chatConnections records information about the chat and the users who are members of it, for example, chatId = conn.
 // The connections slice contains information about each connection and its chat, for example, conn = chatId.
 // After all this, a message is sent to the client.
-func onConnect(r *http.Request, ws interfaces.IWebsocket, chatId string) func(conn *websocket.Conn) {
-	return func(conn *websocket.Conn) {
+func onConnect(r *http.Request, ws interfaces.IWebsocket, chatId string) func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn) {
+	return func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn) {
 		connections[conn] = chatId
 		chatConnections[chatId] = append(chatConnections[chatId], conn)
 		uid, err := r.Cookie("UID")
@@ -93,7 +97,7 @@ func onConnect(r *http.Request, ws interfaces.IWebsocket, chatId string) func(co
 // onMessage processes messages from the user.
 // Determines the type of message and then calls the appropriate handler.
 // After processing, sends the message data back to the client.
-func onMessage(ws interfaces.IWebsocket, mu *sync.Mutex) func(messageType int, msgData []byte, conn *websocket.Conn) {
+func onMessage(r *http.Request, ws interfaces.IWebsocket, mu *sync.Mutex) func(messageType int, msgData []byte, conn *websocket.Conn) {
 	return func(messageType int, msgData []byte, conn *websocket.Conn) {
 		mu.Lock()
 		defer mu.Unlock()
@@ -112,9 +116,9 @@ func onMessage(ws interfaces.IWebsocket, mu *sync.Mutex) func(messageType int, m
 		}
 		switch msg.Type {
 		case TypeTextMsg:
-			handleTypeTextMsg(msg, db, &msgJson)
+			handleTypeTextMsg(r, msg, db, &msgJson)
 		case TypeReadMsg:
-			handleTypeReadMsg(msg, db, &msgJson)
+			handleTypeReadMsg(r, msg, db, &msgJson)
 		}
 		err = db.Close()
 		if err != nil {
@@ -136,7 +140,7 @@ func onMessage(ws interfaces.IWebsocket, mu *sync.Mutex) func(messageType int, m
 
 // handleTypeTextMsg processing a message sent to the chat room.
 // The message is saved to the database, then parsed and sent back to the client.
-func handleTypeTextMsg(msg Msg, db *database.Database, msgJson *string) {
+func handleTypeTextMsg(r *http.Request, msg Msg, db *database.Database, msgJson *string) {
 	if msg.Msg["Text"] == "" {
 		return
 	}
@@ -157,26 +161,21 @@ func handleTypeTextMsg(msg Msg, db *database.Database, msgJson *string) {
 		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
 		return
 	}
-	err = IncrementChatMsgCountFromDb(msg.ChatId, msg.Uid, db)
+	// Increment msg count.
+	err = IncrementChatMsgCountFromDb(r, msg.ChatId, msg.Uid, db)
 	if err != nil {
 		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
 		return
 	}
-	newMsgIncrementNotification(&newMsg)
 	db.AsyncQ().Wait()
 	inc, _ := db.AsyncQ().LoadAsyncRes("inc")
 	if inc.Error != nil {
 		*msgJson = wsError(msg.Uid, msg.ChatId, inc.Error.Error())
 		return
 	}
-	err = newMsgGlobalIncrementNotification(&newMsg, msg.ChatId, db)
+	err = globalIncrementMessages(r, msg.Uid, msg.ChatId, db)
 	if err != nil {
 		*msgJson = wsError(msg.Uid, msg.ChatId, inc.Error.Error())
-		return
-	}
-	err = setNotificationUsers(&newMsg, &msg, db)
-	if err != nil {
-		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
 		return
 	}
 	*msgJson, err = newMsgJson(msg.Type, msg.Uid, msg.ChatId, newMsg)
@@ -186,10 +185,29 @@ func handleTypeTextMsg(msg Msg, db *database.Database, msgJson *string) {
 	}
 }
 
+func globalIncrementMessages(r *http.Request, sendUserId string, chatId string, db *database.Database) error {
+	user, err := GetRecipientUser(chatId, sendUserId, db)
+	if err != nil {
+		return err
+	}
+	count, err := db.SyncQ().QB().Select("count", "chat_msg_count").
+		Where("chat", "=", chatId, "AND", "user", "=", user.Id, "AND count = 1").Ex()
+	if err != nil {
+		return err
+	}
+	if count != nil {
+		err := notification.SendGlobalIncrementMsg(r, user.Id)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // handleTypeReadMsg processing a message read by a user.
 // Changes in the database of message status to "read".
 // Sending data about the message to the client.
-func handleTypeReadMsg(msg Msg, db *database.Database, msgJson *string) {
+func handleTypeReadMsg(r *http.Request, msg Msg, db *database.Database, msgJson *string) {
 	db.AsyncQ().AsyncUpdate("updMsg", "chat_msg", []dbutils.DbEquals{
 		{
 			Name:  "is_read",
@@ -208,12 +226,12 @@ func handleTypeReadMsg(msg Msg, db *database.Database, msgJson *string) {
 		*msgJson = wsError(msg.Uid, msg.ChatId, decMsgCount.Error.Error())
 		return
 	}
-	err := readMsgGlobalDecrementNotification(&msg, db)
+	err := globalDecrementMessages(r, msg.Uid, msg.ChatId, db)
 	if err != nil {
-		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
-		return
+		panic(err)
+		//*msgJson = wsError(msg.Uid, msg.ChatId, decMsgCount.Error.Error())
+		//return
 	}
-	//var err error
 	*msgJson, err = newMsgJson(msg.Type, msg.Uid, msg.ChatId, msg.Msg)
 	if err != nil {
 		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
@@ -221,23 +239,17 @@ func handleTypeReadMsg(msg Msg, db *database.Database, msgJson *string) {
 	}
 }
 
-func readMsgGlobalDecrementNotification(msg *Msg, db *database.Database) error {
-	countQuery, err := db.SyncQ().Count([]string{"id"}, "chat_msg", dbutils.WHEquals(map[string]interface{}{
-		"chat":    msg.ChatId,
-		"is_read": false,
-	}, "AND"), 1)
+func globalDecrementMessages(r *http.Request, readUID string, chatId string, db *database.Database) error {
+	count, err := db.SyncQ().QB().Select("count", "chat_msg_count").
+		Where("chat", "=", chatId, "AND", "user", "=", readUID, "AND count = 0").Ex()
 	if err != nil {
 		return err
 	}
-	count, err := dbutils.ParseInt(countQuery[0]["COUNT(id)"])
-	if err != nil {
-		return err
-	}
-	(*msg).Msg["GlobalDecrement"] = "1"
-	(*msg).Msg["SendToUsersId"] = ""
-	if count == 0 {
-		(*msg).Msg["GlobalDecrement"] = "0"
-		(*msg).Msg["SendToUsersId"] = msg.Uid
+	if count != nil {
+		err := notification.SendGlobalDecrementMsg(r, readUID)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -261,38 +273,6 @@ func getNewMsg(db *database.Database, msgData map[string]interface{}) (map[strin
 	}
 	msgMap := map[string]string{"Id": cm.Id, "UserId": cm.UserId, "Text": cm.Text, "Date": cm.Date, "IsRead": cm.IsRead}
 	return msgMap, nil
-}
-
-func setNotificationUsers(newMsg *map[string]string, msg *Msg, db *database.Database) error {
-	user, err := GetRecipientUser(msg.ChatId, msg.Uid, db)
-	if err != nil {
-		return err
-	}
-	(*newMsg)["SendToUsersId"] = user.Id
-	return nil
-}
-
-func newMsgIncrementNotification(msg *map[string]string) {
-	(*msg)["Increment"] = "0"
-}
-
-func newMsgGlobalIncrementNotification(msg *map[string]string, chatId string, db *database.Database) error {
-	notReadMsgCount, err := db.SyncQ().Count([]string{"id"}, "chat_msg", dbutils.WHEquals(map[string]interface{}{
-		"chat":    chatId,
-		"is_read": false,
-	}, "AND"), 1)
-	if err != nil {
-		return nil
-	}
-	(*msg)["GlobalIncrement"] = "1"
-	count, err := dbutils.ParseInt(notReadMsgCount[0]["COUNT(id)"])
-	if err != nil {
-		return err
-	}
-	if count == 1 {
-		(*msg)["GlobalIncrement"] = "0"
-	}
-	return nil
 }
 
 // wsError sending the error to the client.

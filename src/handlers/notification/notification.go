@@ -4,50 +4,54 @@ import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"github.com/uwine4850/foozy/pkg/interfaces"
+	"github.com/uwine4850/foozy_proj/src/utils"
 	"net/http"
-	"sync"
 )
 
 const (
-	TypeConnect = iota
-	TypeGlobalIncrementMsg
-	TypeGlobalDecrementMsg
-	TypeIncrementMsg
+	WsConnect = iota
+	WsError
+	WsIncrementChatMsgCount
+	WsGlobalIncrementMsg
+	WsGlobalDecrementMsg
 )
 
 type Notification struct {
-	Type int
-	Uid  []string
-	Msg  map[string]string
+	Type    int
+	UserIds []string
+	Msg     map[string]string
 }
 
-var uidConnections = make(map[string]*websocket.Conn)
+type ActionFunc func(messageJsonData *[]byte, notificationData *Notification, conn *websocket.Conn)
+
+var actionsMap = map[int]ActionFunc{
+	WsIncrementChatMsgCount: handleWsIncrementChatMsgCount,
+	WsGlobalIncrementMsg:    handleWsGlobalIncrementMsg,
+	WsGlobalDecrementMsg:    handleWsGlobalDecrementMsg,
+}
+
 var connections = make(map[*websocket.Conn]string)
 
-func NotificationWs(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
-	var mu sync.Mutex
-	ws := manager.GetWebSocket()
-	ws.OnConnect(func(conn *websocket.Conn) {
-		uid, err := r.Cookie("UID")
-		if err != nil {
-			panic(err)
+func WsHandler(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
+	ws := manager.CurrentWebsocket()
+	var notificationJsonData []byte
+	ws.OnConnect(func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn) {
+		once := getRequestOnce(r)
+		uidCookie, _ := r.Cookie("UID")
+		if once == "false" {
+			connections[conn] = uidCookie.Value
 		}
-		uidConnections[uid.Value] = conn
-		connections[conn] = uid.Value
-		notificationJson, err := newNotificationJson(TypeConnect, []string{}, map[string]string{})
-		if err != nil {
-			panic(err)
-		}
-		err = ws.SendMessage(websocket.TextMessage, []byte(notificationJson), conn)
+		err := ws.SendMessage(websocket.TextMessage, notificationJsonData, conn)
 		if err != nil {
 			panic(err)
 		}
 	})
-	ws.OnClientClose(func(conn *websocket.Conn) {
-		uid, ok := connections[conn]
-		if ok {
-			delete(uidConnections, uid)
+	ws.OnClientClose(func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn) {
+		once := getRequestOnce(r)
+		if once == "false" {
 			delete(connections, conn)
+		} else {
+			once = "false"
 		}
 		err := conn.Close()
 		if err != nil {
@@ -55,39 +59,20 @@ func NotificationWs(w http.ResponseWriter, r *http.Request, manager interfaces.I
 		}
 	})
 	ws.OnMessage(func(messageType int, msgData []byte, conn *websocket.Conn) {
-		mu.Lock()
-		defer mu.Unlock()
+		var messageJsonNotification []byte
 		var notification Notification
 		err := json.Unmarshal(msgData, &notification)
 		if err != nil {
 			panic(err)
 		}
-		var notificationJson string
-		switch notification.Type {
-		case TypeGlobalIncrementMsg:
-			nj, err := newNotificationJson(notification.Type, notification.Uid, notification.Msg)
-			if err != nil {
-				panic(err)
-			}
-			notificationJson = nj
-		case TypeGlobalDecrementMsg:
-			nj, err := newNotificationJson(notification.Type, notification.Uid, notification.Msg)
-			if err != nil {
-				panic(err)
-			}
-			notificationJson = nj
-		case TypeIncrementMsg:
-			nj, err := newNotificationJson(notification.Type, notification.Uid, notification.Msg)
-			if err != nil {
-				panic(err)
-			}
-			notificationJson = nj
+		actionFunc, ok := actionsMap[notification.Type]
+		if ok {
+			actionFunc(&messageJsonNotification, &notification, conn)
 		}
-		if notificationJson != "" {
-			for i := 0; i < len(notification.Uid); i++ {
-				uidConn := uidConnections[notification.Uid[i]]
-				if uidConn != nil {
-					err := ws.SendMessage(messageType, []byte(notificationJson), uidConn)
+		for i := 0; i < len(notification.UserIds); i++ {
+			for key, value := range connections {
+				if notification.UserIds[i] == value {
+					err := ws.SendMessage(messageType, messageJsonNotification, key)
 					if err != nil {
 						panic(err)
 					}
@@ -102,15 +87,103 @@ func NotificationWs(w http.ResponseWriter, r *http.Request, manager interfaces.I
 	return func() {}
 }
 
-func newNotificationJson(_type int, uid []string, msg map[string]string) (string, error) {
-	m := Notification{
-		Type: _type,
-		Uid:  uid,
-		Msg:  msg,
-	}
-	marshal, err := json.Marshal(m)
+func handleWsIncrementChatMsgCount(messageJsonData *[]byte, notificationData *Notification, conn *websocket.Conn) {
+	nj, err := notificationJson(notificationData.Type, notificationData.UserIds, notificationData.Msg)
 	if err != nil {
-		return "", err
+		njError, err := notificationError(err)
+		if err != nil {
+			panic(err)
+		}
+		*messageJsonData = njError
+		return
 	}
-	return string(marshal), nil
+	*messageJsonData = nj
+}
+
+func handleWsGlobalIncrementMsg(messageJsonData *[]byte, notificationData *Notification, conn *websocket.Conn) {
+	nj, err := notificationJson(notificationData.Type, notificationData.UserIds, notificationData.Msg)
+	if err != nil {
+		njError, err := notificationError(err)
+		if err != nil {
+			panic(err)
+		}
+		*messageJsonData = njError
+		return
+	}
+	*messageJsonData = nj
+}
+
+func handleWsGlobalDecrementMsg(messageJsonData *[]byte, notificationData *Notification, conn *websocket.Conn) {
+	nj, err := notificationJson(notificationData.Type, notificationData.UserIds, notificationData.Msg)
+	if err != nil {
+		njError, err := notificationError(err)
+		if err != nil {
+			panic(err)
+		}
+		*messageJsonData = njError
+		return
+	}
+	*messageJsonData = nj
+}
+
+func notificationJson(_type int, usersIds []string, msg map[string]string) ([]byte, error) {
+	n := Notification{
+		Type:    _type,
+		UserIds: usersIds,
+		Msg:     msg,
+	}
+	marshal, err := json.Marshal(n)
+	if err != nil {
+		return nil, err
+	}
+	return marshal, nil
+}
+
+func notificationError(err error) ([]byte, error) {
+	return notificationJson(WsError, []string{}, map[string]string{"error": err.Error()})
+}
+
+func getRequestOnce(r *http.Request) string {
+	once := r.Header.Get("once")
+	if once == "" {
+		return "false"
+	}
+	r.Header.Del("once")
+	return once
+}
+
+func SendIncrementMsgChatCount(r *http.Request, userId string, chatId string) error {
+	nj, err := notificationJson(WsIncrementChatMsgCount, []string{userId}, map[string]string{"chatId": chatId})
+	if err != nil {
+		return err
+	}
+	err = utils.WsSendMessage(r, string(nj), "ws://localhost:8000/notification-ws", true)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SendGlobalIncrementMsg(r *http.Request, userId string) error {
+	nj, err := notificationJson(WsGlobalIncrementMsg, []string{userId}, map[string]string{})
+	if err != nil {
+		return err
+	}
+	err = utils.WsSendMessage(r, string(nj), "ws://localhost:8000/notification-ws", true)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SendGlobalDecrementMsg(r *http.Request, userId string) error {
+	nj, err := notificationJson(WsGlobalDecrementMsg, []string{userId}, map[string]string{})
+	if err != nil {
+		return err
+	}
+	err = utils.WsSendMessage(r, string(nj), "ws://localhost:8000/notification-ws", true)
+	if err != nil {
+		return err
+	}
+	return nil
 }

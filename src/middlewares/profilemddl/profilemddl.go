@@ -9,6 +9,9 @@ import (
 )
 
 func AuthMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManagerData) {
+	if r.Header.Get("Connection") == "Upgrade" {
+		return
+	}
 	if r.URL.Path != "/register" && r.URL.Path != "/sign-in" && r.URL.Path != "/sign-in-post" && r.URL.Path != "/register-post" {
 		uid, err := r.Cookie("UID")
 		if err != nil {

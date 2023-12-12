@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"github.com/gorilla/websocket"
 	"github.com/uwine4850/foozy/pkg/router/form"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 func ConvertApplicationFormFields(fieldsName []string, applicationForm url.Values) (map[string]string, bool) {
@@ -43,4 +45,33 @@ func RemoveElement[T comparable](slice []T, element T) []T {
 		}
 	}
 	return result
+}
+
+func WsSendMessage(r *http.Request, msg string, url string, once bool) error {
+	var cookieHeader []string
+	for _, cookie := range r.Cookies() {
+		if cookie.Name == "UID" {
+			continue
+		}
+		cookieHeader = append(cookieHeader, cookie.String())
+	}
+	requestHeader := http.Header{"Cookie": cookieHeader}
+	requestHeader.Set("once", strconv.FormatBool(once))
+	dial, _, err := websocket.DefaultDialer.Dial(url, requestHeader)
+	if err != nil {
+		return err
+	}
+	err = dial.WriteMessage(websocket.TextMessage, []byte(msg))
+	if err != nil {
+		return err
+	}
+	err = dial.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+	if err != nil {
+		return err
+	}
+	err = dial.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }

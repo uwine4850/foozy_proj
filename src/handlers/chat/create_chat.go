@@ -77,7 +77,7 @@ func CreateChatPost(w http.ResponseWriter, r *http.Request, manager interfaces.I
 		if err != nil {
 			return func() { router.ServerError(w, err.Error()) }
 		}
-		err = IncrementChatMsgCountFromDb(strconv.Itoa(chatId), uid.Value, db)
+		err = IncrementChatMsgCountFromDb(r, strconv.Itoa(chatId), uid.Value, db)
 		if err != nil {
 			router.ServerError(w, err.Error())
 		}
