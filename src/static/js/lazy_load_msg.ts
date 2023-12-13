@@ -1,8 +1,8 @@
 import {LazyLoad} from "./lazy_load";
 import {observeMessages} from "./observe_messages";
-import {ConnectData} from "./chat_ws";
+import {IConnectData} from "./chat_ws";
 
-export function runLazyLoadMsg(connectData: ConnectData){
+export function runLazyLoadMsg(connectData: IConnectData){
     let l = new LazyLoad("last-msg", ["first", "msgtype", "uid", "chatid", "msgid"], "/load-messages")
     l.setOptions({
         root: null,
@@ -55,7 +55,7 @@ export function runLazyLoadMsg(connectData: ConnectData){
     })
 }
 
-export function runLazyLoadNotReadMsg(connectData: ConnectData) {
+export function runLazyLoadNotReadMsg(connectData: IConnectData) {
     let l = new LazyLoad("chat-msg-not-read-obs-down", ["first", "msgtype", "uid", "chatid", "msgid"], "/load-messages")
     l.setOptions({
         root: null,

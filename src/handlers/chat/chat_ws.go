@@ -17,17 +17,24 @@ import (
 )
 
 const (
-	TypeConnect = iota
-	TypeTextMsg
-	TypeReadMsg
-	TypeError
+	WsConnect = iota
+	WsTextMsg
+	WsReadMsg
+	WsError
 )
 
-type Msg struct {
+type Message struct {
 	Type   int
 	Uid    string
 	ChatId string
 	Msg    map[string]string
+}
+
+type ActionFunc func(r *http.Request, messageData Message, db *database.Database, msgJson *string)
+
+var actionsMap = map[int]ActionFunc{
+	WsTextMsg: handleWsTextMsg,
+	WsReadMsg: handleWsReadMsg,
 }
 
 var chatConnections = make(map[string][]*websocket.Conn)
@@ -58,19 +65,6 @@ func WsHandler(w http.ResponseWriter, r *http.Request, manager interfaces.IManag
 	return func() {}
 }
 
-func IncrementChatMsgCountFromDb(r *http.Request, chatId string, sendUid string, db *database.Database) error {
-	recipientUser, err := GetRecipientUser(chatId, sendUid, db)
-	if err != nil {
-		return err
-	}
-	db.AsyncQ().AsyncQuery("inc", "UPDATE `chat_msg_count` SET `count`= `count` + 1 WHERE user = ? AND chat = ? ;", recipientUser.Id, chatId)
-	err = notification.SendIncrementMsgChatCount(r, recipientUser.Id, chatId)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // onConnect the function is executed when a new user joins the chat room.
 // The variable chatConnections records information about the chat and the users who are members of it, for example, chatId = conn.
 // The connections slice contains information about each connection and its chat, for example, conn = chatId.
@@ -83,7 +77,7 @@ func onConnect(r *http.Request, ws interfaces.IWebsocket, chatId string) func(w 
 		if err != nil {
 			panic(err)
 		}
-		msgJson, err := newMsgJson(TypeConnect, uid.Value, chatId, map[string]string{})
+		msgJson, err := newMsgJson(WsConnect, uid.Value, chatId, map[string]string{})
 		if err != nil {
 			panic(err)
 		}
@@ -101,7 +95,7 @@ func onMessage(r *http.Request, ws interfaces.IWebsocket, mu *sync.Mutex) func(m
 	return func(messageType int, msgData []byte, conn *websocket.Conn) {
 		mu.Lock()
 		defer mu.Unlock()
-		var msg Msg
+		var msg Message
 		var msgJson string
 		err := json.Unmarshal(msgData, &msg)
 		if err != nil {
@@ -114,11 +108,9 @@ func onMessage(r *http.Request, ws interfaces.IWebsocket, mu *sync.Mutex) func(m
 			msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
 			return
 		}
-		switch msg.Type {
-		case TypeTextMsg:
-			handleTypeTextMsg(r, msg, db, &msgJson)
-		case TypeReadMsg:
-			handleTypeReadMsg(r, msg, db, &msgJson)
+		actionFunc, ok := actionsMap[msg.Type]
+		if ok {
+			actionFunc(r, msg, db, &msgJson)
 		}
 		err = db.Close()
 		if err != nil {
@@ -138,53 +130,84 @@ func onMessage(r *http.Request, ws interfaces.IWebsocket, mu *sync.Mutex) func(m
 	}
 }
 
-// handleTypeTextMsg processing a message sent to the chat room.
+// handleWsTextMsg processing a message sent to the chat room.
 // The message is saved to the database, then parsed and sent back to the client.
-func handleTypeTextMsg(r *http.Request, msg Msg, db *database.Database, msgJson *string) {
-	if msg.Msg["Text"] == "" {
+func handleWsTextMsg(r *http.Request, messageData Message, db *database.Database, msgJson *string) {
+	if messageData.Msg["Text"] == "" {
 		return
 	}
 	newMsgData := map[string]interface{}{
-		"user":    msg.Uid,
-		"chat":    msg.ChatId,
-		"text":    msg.Msg["Text"],
+		"user":    messageData.Uid,
+		"chat":    messageData.ChatId,
+		"text":    messageData.Msg["Text"],
 		"date":    time.Now(),
 		"is_read": false,
 	}
 	_, err := db.SyncQ().Insert("chat_msg", newMsgData)
 	if err != nil {
-		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return
 	}
 	newMsg, err := getNewMsg(db, newMsgData)
 	if err != nil {
-		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return
 	}
 	// Increment msg count.
-	err = IncrementChatMsgCountFromDb(r, msg.ChatId, msg.Uid, db)
+	err = IncrementChatMsgCountFromDb(r, messageData.ChatId, messageData.Uid, db)
 	if err != nil {
-		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return
 	}
-	db.AsyncQ().Wait()
-	inc, _ := db.AsyncQ().LoadAsyncRes("inc")
-	if inc.Error != nil {
-		*msgJson = wsError(msg.Uid, msg.ChatId, inc.Error.Error())
+	err = globalIncrementMessages(r, messageData.Uid, messageData.ChatId, db)
+	if err != nil {
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return
 	}
-	err = globalIncrementMessages(r, msg.Uid, msg.ChatId, db)
+	*msgJson, err = newMsgJson(messageData.Type, messageData.Uid, messageData.ChatId, newMsg)
 	if err != nil {
-		*msgJson = wsError(msg.Uid, msg.ChatId, inc.Error.Error())
-		return
-	}
-	*msgJson, err = newMsgJson(msg.Type, msg.Uid, msg.ChatId, newMsg)
-	if err != nil {
-		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return
 	}
 }
 
+// handleWsReadMsg processing a message read by a user.
+// Changes in the database of message status to "read".
+// Sending data about the message to the client.
+func handleWsReadMsg(r *http.Request, messageData Message, db *database.Database, msgJson *string) {
+	db.AsyncQ().AsyncUpdate("updMsg", "chat_msg", []dbutils.DbEquals{
+		{
+			Name:  "is_read",
+			Value: true,
+		},
+	}, dbutils.WHEquals(map[string]interface{}{"id": messageData.Msg["Id"]}, "AND"))
+	db.AsyncQ().AsyncQuery("decMsgCount", "UPDATE `chat_msg_count` SET `count`= `count` - 1 WHERE user = ? AND chat = ? ;",
+		messageData.Uid, messageData.ChatId)
+	db.AsyncQ().Wait()
+	updMsg, _ := db.AsyncQ().LoadAsyncRes("updMsg")
+	if updMsg.Error != nil {
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, updMsg.Error.Error())
+		return
+	}
+	decMsgCount, _ := db.AsyncQ().LoadAsyncRes("decMsgCount")
+	if decMsgCount.Error != nil {
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, decMsgCount.Error.Error())
+		return
+	}
+	err := globalDecrementMessages(r, messageData.Uid, messageData.ChatId, db)
+	if err != nil {
+		panic(err)
+		//*msgJson = wsError(msg.Uid, msg.ChatId, decMsgCount.Error.Error())
+		//return
+	}
+	*msgJson, err = newMsgJson(messageData.Type, messageData.Uid, messageData.ChatId, messageData.Msg)
+	if err != nil {
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
+		return
+	}
+}
+
+// globalIncrementMessages If all conditions are met, sends a notification increase message to the notification socket.
 func globalIncrementMessages(r *http.Request, sendUserId string, chatId string, db *database.Database) error {
 	user, err := GetRecipientUser(chatId, sendUserId, db)
 	if err != nil {
@@ -202,41 +225,6 @@ func globalIncrementMessages(r *http.Request, sendUserId string, chatId string, 
 		}
 	}
 	return nil
-}
-
-// handleTypeReadMsg processing a message read by a user.
-// Changes in the database of message status to "read".
-// Sending data about the message to the client.
-func handleTypeReadMsg(r *http.Request, msg Msg, db *database.Database, msgJson *string) {
-	db.AsyncQ().AsyncUpdate("updMsg", "chat_msg", []dbutils.DbEquals{
-		{
-			Name:  "is_read",
-			Value: true,
-		},
-	}, dbutils.WHEquals(map[string]interface{}{"id": msg.Msg["Id"]}, "AND"))
-	db.AsyncQ().AsyncQuery("decMsgCount", "UPDATE `chat_msg_count` SET `count`= `count` - 1 WHERE user = ? AND chat = ? ;", msg.Uid, msg.ChatId)
-	db.AsyncQ().Wait()
-	updMsg, _ := db.AsyncQ().LoadAsyncRes("updMsg")
-	if updMsg.Error != nil {
-		*msgJson = wsError(msg.Uid, msg.ChatId, updMsg.Error.Error())
-		return
-	}
-	decMsgCount, _ := db.AsyncQ().LoadAsyncRes("decMsgCount")
-	if decMsgCount.Error != nil {
-		*msgJson = wsError(msg.Uid, msg.ChatId, decMsgCount.Error.Error())
-		return
-	}
-	err := globalDecrementMessages(r, msg.Uid, msg.ChatId, db)
-	if err != nil {
-		panic(err)
-		//*msgJson = wsError(msg.Uid, msg.ChatId, decMsgCount.Error.Error())
-		//return
-	}
-	*msgJson, err = newMsgJson(msg.Type, msg.Uid, msg.ChatId, msg.Msg)
-	if err != nil {
-		*msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
-		return
-	}
 }
 
 func globalDecrementMessages(r *http.Request, readUID string, chatId string, db *database.Database) error {
@@ -277,7 +265,7 @@ func getNewMsg(db *database.Database, msgData map[string]interface{}) (map[strin
 
 // wsError sending the error to the client.
 func wsError(uid string, chatId string, error string) string {
-	msgJson, err := newMsgJson(TypeError, uid, chatId, map[string]string{"Error": error})
+	msgJson, err := newMsgJson(WsError, uid, chatId, map[string]string{"Error": error})
 	if err != nil {
 		panic(err)
 	}
@@ -286,7 +274,7 @@ func wsError(uid string, chatId string, error string) string {
 
 // newMsgJson sending a response to the client in json format.
 func newMsgJson(_type int, uid string, chatId string, msg map[string]string) (string, error) {
-	m := Msg{
+	m := Message{
 		Type:   _type,
 		Uid:    uid,
 		ChatId: chatId,
@@ -297,4 +285,22 @@ func newMsgJson(_type int, uid string, chatId string, msg map[string]string) (st
 		return "", err
 	}
 	return string(marshal), nil
+}
+
+// IncrementChatMsgCountFromDb Increases the number of unread messages of a specific user in a specific chat by 1.
+// sendUid - id of the user who sent the message.
+func IncrementChatMsgCountFromDb(r *http.Request, chatId string, sendUid string, db *database.Database) error {
+	recipientUser, err := GetRecipientUser(chatId, sendUid, db)
+	if err != nil {
+		return err
+	}
+	_, err = db.SyncQ().Query("UPDATE `chat_msg_count` SET `count`= `count` + 1 WHERE user = ? AND chat = ? ;", recipientUser.Id, chatId)
+	if err != nil {
+		return err
+	}
+	err = notification.SendIncrementMsgChatCount(r, recipientUser.Id, chatId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

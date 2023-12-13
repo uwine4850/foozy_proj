@@ -91,11 +91,6 @@ func CreateChatPost(w http.ResponseWriter, r *http.Request, manager interfaces.I
 		if err != nil {
 			return func() { router.ServerError(w, err.Error()) }
 		}
-		db.AsyncQ().Wait()
-		inc, _ := db.AsyncQ().LoadAsyncRes("inc")
-		if inc.Error != nil {
-			return func() { router.ServerError(w, inc.Error.Error()) }
-		}
 		return func() { http.Redirect(w, r, "/chat/"+strconv.Itoa(chatId), http.StatusFound) }
 	}
 	return func() {}
