@@ -17,17 +17,23 @@
         <button><img src="/static/img/search_alt.svg"></button>
     </form>
     <button class="header-button">
-        <a><img src="/static/img/home.svg"> Home</a>
+        <a href="/home"><img src="/static/img/home.svg"> Home</a>
     </button>
     <button class="header-button">
         <a><img src="/static/img/users.svg"> Subscriptions</a>
     </button>
     <div class="header-user-wrap">
         <button class="header-user" id="header-user">
-            <div class="hu-username">renxob</div>
+            <div class="hu-username">{{ currentUser.Username }}</div>
+            {% if currentUser.Avatar %}
             <div class="hu-avatar">
-                <img src="/static/img/temp/1.jpeg">
+                <img src="/{{ currentUser.Avatar }}">
             </div>
+            {% else %}
+            <div class="hu-avatar">
+                <img src="/static/img/default.jpeg">
+            </div>
+            {% endif %}
             <span id="notification-count" class="notification-count">{{ msgCount }}</span>
         </button>
         <span class="hu-menu hu-menu-hidden" id="hu-menu">
@@ -35,7 +41,7 @@
             <a href="#"><span class="hu-menu-n-count">1</span>Notifications</a>
             <a href="/chat-list">Messages</a>
             <a href="/my-subscriptions">My subscriptions</a>
-            <a href="#">New post</a>
+            <a href="/new-post">New post</a>
             <a href="#" id="hu-log-out" class="hu-log-out">Log out</a>
         </span>
         <form action="/log-out-post" method="post" id="log-out-form" enctype="application/x-www-form-urlencoded"></form>

@@ -26,7 +26,7 @@ func CreateChatPost(w http.ResponseWriter, r *http.Request, manager interfaces.I
 		return func() { router.ServerError(w, err.Error()) }
 	}
 	var chatF chatForm
-	err = form.FillStructFromForm(newForm, &chatF, []string{})
+	err = form.FillStructFromForm(newForm, form.NewFillableFormStruct(&chatF), []string{})
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}

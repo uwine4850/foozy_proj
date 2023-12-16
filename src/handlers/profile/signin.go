@@ -39,7 +39,7 @@ func SignInPost(w http.ResponseWriter, r *http.Request, manager interfaces.IMana
 		return func() { router.RedirectError(w, r, "/sign-in", err.Error(), manager) }
 	}
 	var signInForm SignInForm
-	err = form.FillStructFromForm(frm, &signInForm, []string{})
+	err = form.FillStructFromForm(frm, form.NewFillableFormStruct(&signInForm), []string{})
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}

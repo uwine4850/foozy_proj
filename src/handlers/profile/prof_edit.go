@@ -85,7 +85,7 @@ func ProfileEditPost(w http.ResponseWriter, r *http.Request, manager interfaces.
 		return func() { router.RedirectError(w, r, fmt.Sprintf("/profile/%s/edit", uid), err.Error(), manager) }
 	}
 	var fillProfileEditForm editFormData
-	err = form.FillStructFromForm(frm, &fillProfileEditForm, []string{})
+	err = form.FillStructFromForm(frm, form.NewFillableFormStruct(&fillProfileEditForm), []string{})
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
@@ -93,13 +93,13 @@ func ProfileEditPost(w http.ResponseWriter, r *http.Request, manager interfaces.
 
 	// Save avatar
 	if fillProfileEditForm.DelAvatar == "" {
-		file, fileHeader, err := frm.File("avatar")
+		_, fileHeader, err := frm.File("avatar")
 		if err != nil && !errors.Is(err, http.ErrMissingFile) {
 			return func() { router.ServerError(w, err.Error()) }
 		}
 		var buildPath string
 		if !errors.Is(err, http.ErrMissingFile) {
-			err := form.SaveFile(w, file, fileHeader, "media/avatars/", &buildPath)
+			err := form.SaveFile(w, fileHeader, "media/avatars/", &buildPath)
 			if err != nil {
 				return func() { router.ServerError(w, err.Error()) }
 			}

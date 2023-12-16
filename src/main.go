@@ -7,12 +7,12 @@ import (
 	"github.com/uwine4850/foozy/pkg/router"
 	server2 "github.com/uwine4850/foozy/pkg/server"
 	"github.com/uwine4850/foozy/pkg/tmlengine"
-	"github.com/uwine4850/foozy/pkg/utils"
-	"github.com/uwine4850/foozy_proj/src/conf"
 	"github.com/uwine4850/foozy_proj/src/handlers/chat"
 	"github.com/uwine4850/foozy_proj/src/handlers/notification"
+	"github.com/uwine4850/foozy_proj/src/handlers/post"
 	"github.com/uwine4850/foozy_proj/src/handlers/profile"
 	"github.com/uwine4850/foozy_proj/src/middlewares/chatmddl"
+	"github.com/uwine4850/foozy_proj/src/middlewares/notificationmddl"
 	"github.com/uwine4850/foozy_proj/src/middlewares/profilemddl"
 	"net/http"
 )
@@ -22,27 +22,7 @@ func main() {
 	mddl.AsyncHandlerMddl(builtin_mddl.GenerateAndSetCsrf)
 	mddl.AsyncHandlerMddl(chatmddl.ChatPermissionMddl)
 	mddl.HandlerMddl(1, profilemddl.AuthMddl)
-	mddl.HandlerMddl(2, func(w http.ResponseWriter, r *http.Request, manager interfaces.IManagerData) {
-		if utils.SliceContains([]string{"/notification-ws", "/chat-ws", "/load-messages"}, r.URL.Path) {
-			return
-		}
-		uid, err := r.Cookie("UID")
-		if err != nil {
-			return
-		}
-		db := conf.DatabaseI
-		err = db.Connect()
-		if err != nil {
-			panic(err)
-		}
-		defer db.Close()
-		count, err := db.SyncQ().QB().Select("count", "chat_msg_count").
-			Where("user", "=", uid.Value, "AND", "count > 0").Ex()
-		if err != nil {
-			return
-		}
-		manager.SetContext(map[string]interface{}{"msgCount": len(count)})
-	})
+	mddl.HandlerMddl(2, notificationmddl.NotificationCountMddl)
 	engine, err := tmlengine.NewTemplateEngine()
 	if err != nil {
 		panic(err)
@@ -64,14 +44,8 @@ func main() {
 		return func() {}
 	})
 	newRouter.Get("/prof/<id>", profile.ProfileView)
-	newRouter.Get("/new-post", func(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
-		manager.SetTemplatePath("src/templates/new_post.html")
-		err := manager.RenderTemplate(w, r)
-		if err != nil {
-			panic(err)
-		}
-		return func() {}
-	})
+	newRouter.Get("/new-post", post.CreatePost)
+	newRouter.Post("/save-post", post.SavePost)
 	newRouter.Get("/register", profile.Register)
 	newRouter.Post("/register-post", profile.RegisterPost)
 	newRouter.Get("/sign-in", profile.SignIn)
