@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "t2/base.html" %}
 
 {% block cont %}
 <div class="chat-list">
@@ -19,7 +19,11 @@
                 <div class="chat-list-user-msg">{{ chatInfo.LastMsg.Text }}</div>
             </div>
         </div>
-        <div id="chat-list-user-msg-count" class="chat-list-user-msg-count">{{ chatInfo.MsgCount }}</div>
+        <div id="chat-list-user-msg-count" class="chat-list-user-msg-count">
+            {% if chatInfo.MsgCount != 0 %}
+                {{ chatInfo.MsgCount }}
+            {% endif %}
+        </div>
     </a>
     {% endfor %}
 </div>

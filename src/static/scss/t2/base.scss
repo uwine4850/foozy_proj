@@ -1,0 +1,224 @@
+@import "../vars";
+
+.base-content{
+  display: flex;
+}
+
+.base-left-menu{
+  width: 400px;
+  height: fit-content;
+  background: #262626;
+  margin-left: 50px;
+  margin-top: 20px;
+  border-radius: 5px;
+}
+
+.base-right-side-scroll{
+  overflow-y: scroll;
+  height: 100vh;
+  width: fit-content;
+  .base-right-side{
+    width: 800px;
+    height: 100vh;
+    background: #262626;
+    margin-left: 50px;
+    display: flex;
+  }
+}
+
+.blm-profile{
+  width: 100%;
+  height: fit-content;
+  background-color: #323232;
+  border-radius: 5px;
+  box-sizing: border-box;
+  padding: 10px;
+  display: flex;
+  .b-avatar{
+    max-width: 70px;
+    min-width: 70px;
+    height: 70px;
+    border-radius: 4px;
+    overflow: hidden;
+    img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+  .b-profile-info{
+    display: flex;
+    margin-left: 10px;
+    width: 100%;
+    .pi-names{
+      display: flex;
+      flex-direction: column;
+      .pi-name{
+        font-size: 1.4rem;
+        line-height: 1.4rem;
+        font-weight: 500;
+      }
+      .pi-username{
+        margin-top: 5px;
+        color: $grayFont;
+        font-size: 1.2rem;
+      }
+    }
+    .pi-edit-profile-btn{
+      @include defaultButton();
+      background-color: $lightGray;
+      width: 60px;
+      height: 30px;
+      margin-left: auto;
+      a{
+        span{
+          margin: auto;
+        }
+      }
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.2rem;
+      border-radius: 3px;
+    }
+  }
+}
+
+.base-menu-buttons{
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 10px;
+  button{
+    @include defaultButton();
+    background-color: #323232;
+    width: 100%;
+    height: 40px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    a{
+      .menu-msg-count{
+        margin-left: auto;
+      }
+    }
+  }
+  .base-menu-buttons-separate{
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    height: 1px;
+    outline: none;
+    border-color: #454545;
+  }
+  .base-menu-buttons-block{
+    margin-top: 5px;
+    button{
+      &:last-child{
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+// PAGE PANEL
+
+.page-panel{
+  //width: 100%;
+  border-radius: 3px;
+  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  .page-panel-title{
+    font-size: 24px;
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+  .page-panel-input{
+    display: flex;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
+    &:last-child{
+      margin-bottom: 0;
+    }
+    label{
+      background-color: $lightGray;
+      padding: 5px 10px;
+      font-size: 18px;
+      font-weight: 500;
+      border-radius: 3px 0 0 3px;
+      min-width: fit-content;
+    }
+    input{
+      background-color: #3D3C3C;
+      border: none;
+      outline: none;
+      padding: 5px 10px;
+      font-size: 16px;
+      border-radius: 0 3px 3px 0;
+      width: 100%;
+    }
+    select{
+      background-color: #3D3C3C;
+      border: none;
+      outline: none;
+      padding-left: 10px;
+      font-size: 16px;
+    }
+  }
+  .page-panel-textarea{
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+    &:last-child{
+      margin-bottom: 0;
+    }
+    label{
+      background-color: $lightGray;
+      padding: 5px 10px;
+      font-size: 18px;
+      font-weight: 500;
+      border-radius: 3px 3px 0 0;
+      width: fit-content;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+    }
+    textarea{
+      width: 100%;
+      box-sizing: border-box;
+      border: none;
+      outline: none;
+      background-color: #3D3C3C;
+      resize: none;
+      padding: 10px 10px;
+      font-size: 16px;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+    }
+  }
+  .page-panel-checkbox{
+    box-shadow: none;
+    label{
+      border-radius: 3px;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+    }
+    input{
+      width: fit-content;
+      display: none;
+    }
+  }
+  .page-panel-checkbox-true{
+    label{
+      background-color: $darkBlue;
+    }
+  }
+}
+
+.create-btn{
+  margin-left: auto;
+  width: 100px;
+  height: 40px;
+  font-size: 18px;
+  @include linkButton(#2E8642, rgba(0, 0, 0, 0.2));
+}

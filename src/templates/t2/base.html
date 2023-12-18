@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/splide.min.css">
+    <title>Title</title>
+</head>
+<body>
+<form action="/log-out-post" method="post" id="log-out-form" enctype="application/x-www-form-urlencoded"></form>
+    <div class="base-content">
+        <div class="base-left-menu">
+            <div class="blm-profile">
+                <div class="b-avatar">
+                    <img src="/static/img/temp/1.jpeg">
+                </div>
+                <div class="b-profile-info">
+                    <div class="pi-names">
+                        <div class="pi-name">renxob</div>
+                        <div class="pi-username">
+                            @renxob
+                        </div>
+                    </div>
+                    <button class="pi-edit-profile-btn">
+                        <a href=""><span>Edit</span></a>
+                    </button>
+                </div>
+            </div>
+            <div class="base-menu-buttons">
+                <div class="base-menu-buttons-block">
+                    <button class="u-chat-list">
+                        <a href="/chat-list">
+                            <img src="/static/img/2/chat_list.svg">
+                            <span>Chat list</span>
+                            <span id="chat-list-msg-count" class="menu-msg-count">
+                                {% if msgCount != 0 %}
+                                    {{ msgCount }}
+                                {% endif %}
+                            </span>
+                        </a>
+                    </button>
+                    <button class="u-chat-list">
+                        <a href="">
+                            <img src="/static/img/2/groups.svg">
+                            <span>Groups</span>
+                        </a>
+                    </button>
+                </div>
+                <hr class="base-menu-buttons-separate">
+                <div class="base-menu-buttons-block">
+                    <button>
+                        <a href="">
+                            <img src="/static/img/2/new_group.svg">
+                            <span>New group</span>
+                        </a>
+                    </button>
+                    <button>
+                        <a href="">
+                            <img src="/static/img/2/search.svg">
+                            <span>Search</span>
+                        </a>
+                    </button>
+                    <button id="log-out-btn">
+                        <a>
+                            <img src="/static/img/2/log_out.svg">
+                            <span>Log out</span>
+                        </a>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="base-right-side-scroll">
+            <div class="base-right-side">
+                <script type="text/javascript" src="/static/js/jquery-3.7.1.min.js"></script>
+                {% block cont %}
+                {% endblock cont %}
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="/static/js/bundle.js"></script>
+<script>
+    document.getElementById("log-out-btn").onclick = function (){
+        document.getElementById("log-out-form").submit();
+    }
+</script>
+</body>
+</html>

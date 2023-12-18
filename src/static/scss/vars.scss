@@ -2,7 +2,8 @@ $secondaryColor: #454545;
 $primaryBgColor: #323232;
 $darkBlue: #2E4E6C;
 $lightGray: #454545;
-$blockShadow: 0 0 10px 0 rgba(0, 0, 0, 0.54) inset, 0 4px 4px 0 rgba(0, 0, 0, 0.25);
+$grayFont: #818181;
+$blockShadow: 0 0 3px 0 rgba(0, 0, 0, 0.54) inset, 0 2px 2px 0 rgba(0, 0, 0, 0.25);
 @mixin lightMixin($rgba, $bgColor, $borr) {
   background: linear-gradient(#{$bgColor}, #{$bgColor}) padding-box,
   rgba(255, 255, 255, 0.3) border-box;
@@ -26,8 +27,8 @@ $blockShadow: 0 0 10px 0 rgba(0, 0, 0, 0.54) inset, 0 4px 4px 0 rgba(0, 0, 0, 0.
     cursor: pointer;
   }
   &:active{
-    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.54) inset, 0 0 0 0 rgba(0, 0, 0, 0.25);
-    transform: scale(95%);
+    box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.54) inset, 0 0 0 0 rgba(0, 0, 0, 0.25);
+    transform: scale(98%);
   }
   img{
     width: 25px;
@@ -41,5 +42,31 @@ $blockShadow: 0 0 10px 0 rgba(0, 0, 0, 0.54) inset, 0 4px 4px 0 rgba(0, 0, 0, 0.
     display: flex;
     align-items: center;
     padding: 0 20px;
+  }
+}
+
+@mixin defaultButton(){
+  border: none;
+  outline: none;
+  display: flex;
+  box-sizing: border-box;
+  transition: .2s;
+  &:hover{
+    cursor: pointer;
+    filter: brightness(90%);
+  }
+  a{
+    height: 100%;
+    width: 100%;
+    text-decoration: none;
+    padding: 5px;
+    box-sizing: border-box;
+    display: flex;
+    img{
+      margin: auto 0 auto 5px;
+    }
+    span{
+      margin: auto 5px auto 10px;
+    }
   }
 }

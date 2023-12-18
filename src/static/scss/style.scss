@@ -1,12 +1,11 @@
-@import "base";
 @import "vars";
-@import "home";
 @import "profile";
-@import "new_post";
 @import "auth";
-@import "my_subscriptions";
 @import "chat";
 @import "chat_list";
+
+@import "t2/base";
+@import "t2/home";
 
 * {
   margin: 0;
@@ -16,11 +15,11 @@
 }
 
 body{
-  background-color: #262626;
+  background-color: #221E1E;
 }
 
 ::-webkit-scrollbar{
-  width: 10px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-thumb{

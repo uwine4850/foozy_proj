@@ -43,7 +43,10 @@ function handlerWsIncrementChatMsgCount(notification: INotification, ws: WebSock
     if (window.location.pathname === "/chat-list"){
         const chat = document.querySelector(`[data-chatid="${notification.Msg.chatId}"]`);
         let countEl = chat.querySelector("#chat-list-user-msg-count");
-        let num = parseInt(countEl.innerHTML);
+        let num = 0;
+        if (countEl.innerHTML.trim() != ""){
+            num = parseInt(countEl.innerHTML);
+        }
         if (typeof num == "number"){
             num++;
         }
@@ -72,13 +75,20 @@ export function RunWsNotification() {
 }
 
 function incrementNotificationCount(increment: boolean){
-    let notificationCount = document.getElementById("notification-count");
-    let number = parseInt(notificationCount.innerText);
+    let notificationCount = document.getElementById("chat-list-msg-count");
+    let number = 0;
+    if (notificationCount.innerText.trim() != ""){
+        number = parseInt(notificationCount.innerText);
+    }
     if (increment && typeof number == "number"){
         number++;
     }
     if (!increment && typeof number == "number"){
         number--;
+        if (number == 0){
+            notificationCount.innerText = "";
+            return
+        }
     }
     notificationCount.innerText = String(number);
 }

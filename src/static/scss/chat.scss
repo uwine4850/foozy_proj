@@ -1,18 +1,16 @@
 @import "vars";
 
 .chat-border{
-  width: 800px;
-  background-color: $primaryBgColor;
+  width: 100%;
+  height: 100%;
   box-sizing: border-box;
-  margin: 1px auto 0;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 61px);
 }
 
 .chat-user{
   width: 100%;
-  height: 50px;
+  height: 70px;
   background-color: $secondaryColor;
   display: flex;
   padding: 0 10px;

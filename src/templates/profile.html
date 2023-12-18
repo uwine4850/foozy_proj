@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "t2/base.html" %}
 
 {% block cont %}
 <form action="/create-chat" method="post" enctype="application/x-www-form-urlencoded" id="new-msg-form" class="new-msg-form new-msg-form-hidden">
@@ -28,51 +28,12 @@
                 @{{ user.Username }}
             </div>
         </div>
-        <div class="profile-info-items">
-            <div class="p-item">
-                <div class="p-item-name">
-                    Subscribers
-                </div>
-                <div class="p-item-value" id="subscribers-value">
-                    {{ subCount }}
-                </div>
-            </div>
-            <div class="p-item">
-                <div class="p-item-name">
-                    Posts
-                </div>
-                <div class="p-item-value">
-                    52
-                </div>
-            </div>
-            <div class="p-item">
-                <div class="p-item-name">
-                    Avg. post rating
-                </div>
-                <div class="p-item-value">
-                    3,5
-                </div>
-            </div>
-        </div>
         <div class="profile-buttons">
             {% if user.Id == UID %}
             <button class="profile-button-edit">
                 <a href="/profile/{{ UID }}/edit"><img src="/static/img/edit.svg">Edit</a>
             </button>
             {% else %}
-                {% if isSubscribe %}
-                    <form id="subscribe-post" method="post" action="/subscribe-post" enctype="application/x-www-form-urlencoded">
-                        <button id="profile-button-subscribe" class="profile-button-subscribe profile-button-unsubscribe">
-                            <a><img src="/static/img/subscribe.svg">Unsubscribe</a>
-                        </button>
-                    </form>
-                {% else %}
-                    <form id="subscribe-post" method="post" action="/subscribe-post" enctype="application/x-www-form-urlencoded">
-                        <button id="profile-button-subscribe" class="profile-button-subscribe">
-                            <a><img src="/static/img/subscribe.svg">Subscribe</a>
-                        </button>
-                    </form>
-                {% endif %}
             <button id="profile-button-message" data-chatId="{{ isChatExist }}" class="profile-button-message">
                 <a><img src="/static/img/message.svg">Message</a>
             </button>
@@ -83,145 +44,6 @@
             {{ user.Description }}
         </div>
         {% endif %}
-    </div>
-    <div class="profile-content">
-        <div class="profile-content-menu">
-            <div class="pc-menu-filter">
-                <div class="pc-menu-filter-name">
-                    Category
-                </div>
-                <button class="pc-menu-filter-value" id="pc-menu-filter-value">
-                    pixel
-                </button>
-                <div class="filter-items filter-items-hidden" id="filter-items">
-                    <button>Pixel</button>
-                    <button>Pixel</button>
-                    <button>Pixel</button>
-                    <button>Pixel</button>
-                </div>
-            </div>
-        </div>
-        <div class="posts">
-            <a href="#" class="post">
-                <img class="post-preview-img" src="/static/img/temp/1.jpeg">
-                <div class="preview-post-shadow"></div>
-                <div class="preview-post-info">
-                    <div class="pp-name">
-                        Post name
-                    </div>
-                    <div class="pp-user">
-                        <div class="pp-user-avatar">
-                            <img class="pp-user-avatar-img" src="/static/img/temp/1.jpeg" alt="">
-                        </div>
-                        <div class="pp-user-name">
-                            renxob
-                        </div>
-                    </div>
-                </div>
-            </a>
-            <a href="#" class="post">
-                <img class="post-preview-img" src="/static/img/temp/1.jpeg">
-                <div class="preview-post-shadow"></div>
-                <div class="preview-post-info">
-                    <div class="pp-name">
-                        Post name
-                    </div>
-                    <div class="pp-user">
-                        <div class="pp-user-avatar">
-                            <img class="pp-user-avatar-img" src="/static/img/temp/1.jpeg" alt="">
-                        </div>
-                        <div class="pp-user-name">
-                            renxob
-                        </div>
-                    </div>
-                </div>
-            </a>
-            <a href="#" class="post">
-                <img class="post-preview-img" src="/static/img/temp/1.jpeg">
-                <div class="preview-post-shadow"></div>
-                <div class="preview-post-info">
-                    <div class="pp-name">
-                        Post name
-                    </div>
-                    <div class="pp-user">
-                        <div class="pp-user-avatar">
-                            <img class="pp-user-avatar-img" src="/static/img/temp/1.jpeg" alt="">
-                        </div>
-                        <div class="pp-user-name">
-                            renxob
-                        </div>
-                    </div>
-                </div>
-            </a>
-            <a href="#" class="post">
-                <img class="post-preview-img" src="/static/img/temp/1.jpeg">
-                <div class="preview-post-shadow"></div>
-                <div class="preview-post-info">
-                    <div class="pp-name">
-                        Post name
-                    </div>
-                    <div class="pp-user">
-                        <div class="pp-user-avatar">
-                            <img class="pp-user-avatar-img" src="/static/img/temp/1.jpeg" alt="">
-                        </div>
-                        <div class="pp-user-name">
-                            renxob
-                        </div>
-                    </div>
-                </div>
-            </a>
-            <a href="#" class="post">
-                <img class="post-preview-img" src="/static/img/temp/1.jpeg">
-                <div class="preview-post-shadow"></div>
-                <div class="preview-post-info">
-                    <div class="pp-name">
-                        Post name
-                    </div>
-                    <div class="pp-user">
-                        <div class="pp-user-avatar">
-                            <img class="pp-user-avatar-img" src="/static/img/temp/1.jpeg" alt="">
-                        </div>
-                        <div class="pp-user-name">
-                            renxob
-                        </div>
-                    </div>
-                </div>
-            </a>
-            <a href="#" class="post">
-                <img class="post-preview-img" src="/static/img/temp/1.jpeg">
-                <div class="preview-post-shadow"></div>
-                <div class="preview-post-info">
-                    <div class="pp-name">
-                        Post name
-                    </div>
-                    <div class="pp-user">
-                        <div class="pp-user-avatar">
-                            <img class="pp-user-avatar-img" src="/static/img/temp/1.jpeg" alt="">
-                        </div>
-                        <div class="pp-user-name">
-                            renxob
-                        </div>
-                    </div>
-                </div>
-            </a>
-            <a href="#" class="post">
-                <img class="post-preview-img" src="/static/img/temp/1.jpeg">
-                <div class="preview-post-shadow"></div>
-                <div class="preview-post-info">
-                    <div class="pp-name">
-                        Post name
-                    </div>
-                    <div class="pp-user">
-                        <div class="pp-user-avatar">
-                            <img class="pp-user-avatar-img" src="/static/img/temp/1.jpeg" alt="">
-                        </div>
-                        <div class="pp-user-name">
-                            renxob
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
     </div>
 </div>
 <script>

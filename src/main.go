@@ -9,7 +9,6 @@ import (
 	"github.com/uwine4850/foozy/pkg/tmlengine"
 	"github.com/uwine4850/foozy_proj/src/handlers/chat"
 	"github.com/uwine4850/foozy_proj/src/handlers/notification"
-	"github.com/uwine4850/foozy_proj/src/handlers/post"
 	"github.com/uwine4850/foozy_proj/src/handlers/profile"
 	"github.com/uwine4850/foozy_proj/src/middlewares/chatmddl"
 	"github.com/uwine4850/foozy_proj/src/middlewares/notificationmddl"
@@ -36,7 +35,7 @@ func main() {
 		if ok {
 			return func() {}
 		}
-		manager.SetTemplatePath("src/templates/home.html")
+		manager.SetTemplatePath("src/templates/t2/home.html")
 		err := manager.RenderTemplate(w, r)
 		if err != nil {
 			panic(err)
@@ -44,8 +43,6 @@ func main() {
 		return func() {}
 	})
 	newRouter.Get("/prof/<id>", profile.ProfileView)
-	newRouter.Get("/new-post", post.CreatePost)
-	newRouter.Post("/save-post", post.SavePost)
 	newRouter.Get("/register", profile.Register)
 	newRouter.Post("/register-post", profile.RegisterPost)
 	newRouter.Get("/sign-in", profile.SignIn)
@@ -53,8 +50,6 @@ func main() {
 	newRouter.Get("/profile/<id>/edit", profile.ProfileEdit)
 	newRouter.Post("/profile-edit-post/<id>", profile.ProfileEditPost)
 	newRouter.Post("/log-out-post", profile.ProfileLogOutPost)
-	newRouter.Post("/subscribe-post", profile.SubscribePost)
-	newRouter.Get("/my-subscriptions", profile.MySubscriptions)
 	newRouter.Get("/chat/<id>", chat.Chat)
 	newRouter.Get("/chat-list", chat.ChatList)
 	newRouter.Post("/create-chat", chat.CreateChatPost)
