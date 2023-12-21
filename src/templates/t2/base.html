@@ -15,17 +15,21 @@
         <div class="base-left-menu">
             <div class="blm-profile">
                 <div class="b-avatar">
-                    <img src="/static/img/temp/1.jpeg">
+                    {% if currentUser.Avatar %}
+                        <img src="/{{ currentUser.Avatar }}">
+                    {% else %}
+                        <img src="/static/img/default.jpeg">
+                    {% endif %}
                 </div>
                 <div class="b-profile-info">
                     <div class="pi-names">
-                        <div class="pi-name">renxob</div>
+                        <a href="/prof/{{ currentUser.Id }}" class="pi-name">{{ currentUser.Name }}</a>
                         <div class="pi-username">
-                            @renxob
+                            @{{ currentUser.Username }}
                         </div>
                     </div>
                     <button class="pi-edit-profile-btn">
-                        <a href=""><span>Edit</span></a>
+                        <a href="/profile/{{ currentUser.Id }}/edit"><span>Edit</span></a>
                     </button>
                 </div>
             </div>

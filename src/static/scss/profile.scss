@@ -2,13 +2,13 @@
 
 .profile-wrap{
   display: flex;
+  width: 100%;
 }
 
 .profile-left-side{
   display: flex;
   flex-direction: column;
-  min-width: 100%;
-  max-width: 100%;
+  width: 100%;
   height: 100%;
   box-sizing: border-box;
   padding: 10px;
@@ -17,6 +17,7 @@
 .profile-avatar{
   min-width: 300px;
   min-height: 300px;
+  max-height: 500px;
   border-radius: 3px;
   overflow: hidden;
   margin: 0 auto;
@@ -29,7 +30,6 @@
 }
 
 .profile-username{
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
   margin-top: 15px;
   display: flex;
   font-size: 18px;
@@ -46,16 +46,20 @@
 .profile-buttons{
   display: flex;
   button{
-    font-size: 18px;
+    @include defaultButton();
     height: 40px;
-    transition: 2s;
     margin-top: 10px;
+    border-radius: 3px;
+    font-size: 1.2rem;
+    font-weight: 500;
   }
   .profile-button-message{
-    @include linkButton(#2E4E6C, rgba(0, 0, 0, 0.2))
+    background-color: #2E4E6C;
+    padding: 0 5px;
   }
   .profile-button-edit{
-    @include linkButton(#862E2E, rgba(0, 0, 0, 0.2))
+    background-color: #862E2E;
+    padding: 0 5px;
   }
 }
 
@@ -65,7 +69,6 @@
   padding: 10px;
   background-color: $lightGray;
   border-radius: 3px;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
 }
 
 .new-msg-form{

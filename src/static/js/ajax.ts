@@ -1,18 +1,33 @@
+const axios = require('axios').default;
 declare const $: any;
+
+interface FormDataFormValue {
+    name: string,
+    value: any,
+    fileName?: string
+}
+
+interface UrlFormValue{
+    name: string,
+    value: string,
+}
 
 export class Ajax{
     public path: string;
     public formId: string;
 
-    private onSuccessFn: (response: string) => void;
+    private onSuccessFn: (response: object) => void;
     private onErrorFn: (response: string) => void;
+    private formValues: FormDataFormValue[];
+    private urlFormValue: UrlFormValue[];
 
     constructor(path: string, formId: string) {
         this.path = path;
         this.formId = formId;
+        this.formValues = [];
     }
 
-    onSuccess(fn: (error: string)=> void){
+    onSuccess(fn: (error: object)=> void){
         this.onSuccessFn = fn;
     }
 
@@ -20,24 +35,70 @@ export class Ajax{
         this.onErrorFn = fn;
     }
 
-    listen(){
-        $(document).ready(() => {
-            $('#' + this.formId).submit((e) => {
-                e.preventDefault();
-                let formData = $(this).serialize();
-                $.ajax({
-                    type: 'POST',
-                    url: this.path,
-                    data: formData,
-                    success: (response) => {
-                        this.onSuccessFn(response)
-                    },
-                    error: (xhr, status, error) => {
-                        this.onErrorFn(error)
-                    }
-                });
-            });
+    public setUrlFormValue(name: string, value: string){
+        let urlFormValue: UrlFormValue = {
+            name: name,
+            value: value,
+        }
+        this.urlFormValue.push(urlFormValue);
+    }
+
+    public setMultipartFormValue(name: string, value: string){
+        let formValue: FormDataFormValue = {
+            name: name,
+            value: value,
+        }
+        this.formValues.push(formValue);
+    }
+
+    public setMultipartFormFile(name: string, value: Blob, fileName: string){
+        let formValue: FormDataFormValue = {
+            name: name,
+            value: value,
+            fileName: fileName
+        }
+        this.formValues.push(formValue);
+    }
+
+    async listen(){
+        const form = document.getElementById(this.formId) as HTMLFormElement;
+        const formEnctype: string = form.getAttribute('enctype');
+
+        form.addEventListener('submit', (e) =>{
+            e.preventDefault();
+            let data;
+            let formData = new FormData(form);
+            for (const formValue of this.formValues) {
+                if (!formValue.fileName){
+                    formData.append(formValue.name, formValue.value);
+                } else {
+                    formData.append(formValue.name, formValue.value, formValue.fileName);
+                }
+            }
+            if (formEnctype == "application/x-www-form-urlencoded"){
+                let u = new URLSearchParams(formData as any);
+                for (const urlFormValue of this.urlFormValue) {
+                    u.set(urlFormValue.name, urlFormValue.value);
+                }
+                data = u.toString()
+            } else {
+                data = formData;
+            }
+            this.send(data, formEnctype);
         });
+    }
+
+    private async send(formData: any, enctype: string){
+        try {
+            const response = await axios.post(this.path, formData, {
+                headers: {
+                    'Content-Type': enctype,
+                },
+            });
+            this.onSuccessFn(response.data);
+        } catch (error) {
+            this.onErrorFn(error.data);
+        }
     }
 }
 

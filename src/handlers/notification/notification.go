@@ -36,7 +36,7 @@ func WsHandler(w http.ResponseWriter, r *http.Request, manager interfaces.IManag
 	ws := manager.CurrentWebsocket()
 	var notificationJsonData []byte
 	ws.OnConnect(func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn) {
-		once := getRequestOnce(r)
+		once := GetRequestOnce(r)
 		uidCookie, _ := r.Cookie("UID")
 		if once == "false" {
 			connections[conn] = uidCookie.Value
@@ -47,7 +47,7 @@ func WsHandler(w http.ResponseWriter, r *http.Request, manager interfaces.IManag
 		}
 	})
 	ws.OnClientClose(func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn) {
-		once := getRequestOnce(r)
+		once := GetRequestOnce(r)
 		if once == "false" {
 			delete(connections, conn)
 		} else {
@@ -143,7 +143,7 @@ func notificationError(err error) ([]byte, error) {
 	return notificationJson(WsError, []string{}, map[string]string{"error": err.Error()})
 }
 
-func getRequestOnce(r *http.Request) string {
+func GetRequestOnce(r *http.Request) string {
 	once := r.Header.Get("once")
 	if once == "" {
 		return "false"

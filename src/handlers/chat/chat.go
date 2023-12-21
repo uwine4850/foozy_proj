@@ -17,6 +17,13 @@ type ChatMessage struct {
 	Text   string `db:"text"`
 	Date   string `db:"date"`
 	IsRead string `db:"is_read"`
+	Images []MessageImage
+}
+
+type MessageImage struct {
+	Id            string `db:"id"`
+	ParentMessage string `db:"parent_msg"`
+	Path          string `db:"path"`
 }
 
 func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
@@ -58,6 +65,12 @@ func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) f
 		if err != nil {
 			return func() { router.ServerError(w, err.Error()) }
 		}
+		// Load images.
+		images, err := loadMessageImages(cm.Id, db)
+		if err != nil {
+			return func() { router.ServerError(w, err.Error()) }
+		}
+		cm.Images = images
 		chatMessages = append(chatMessages, cm)
 	}
 	manager.SetTemplatePath("src/templates/chat.html")
@@ -144,4 +157,22 @@ func loadChatMsg(chatId int, userData profile.UserData, db *database.Database) (
 		}
 		return notReadMessage[0], nil
 	}
+}
+
+func loadMessageImages(parentMessageId string, db *database.Database) ([]MessageImage, error) {
+	images, err := db.SyncQ().QB().Select("*", "chat_msg_images").
+		Where("parent_msg", "=", parentMessageId).Ex()
+	if err != nil {
+		return nil, err
+	}
+	var messageImages []MessageImage
+	for i := 0; i < len(images); i++ {
+		var mi MessageImage
+		err := dbutils.FillStructFromDb(images[i], &mi)
+		if err != nil {
+			return nil, err
+		}
+		messageImages = append(messageImages, mi)
+	}
+	return messageImages, nil
 }

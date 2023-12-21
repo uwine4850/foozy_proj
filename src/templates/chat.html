@@ -21,6 +21,13 @@
                     {% if msg.IsRead == "0" %}
                     <div class="chat-msg-not-read-my"></div>
                     {% endif %}
+                    <div class="chat-content-msg-images">
+                        {% for image in msg.Images %}
+                        <span>
+                            <img src="/{{ image.Path }}">
+                        </span>
+                        {% endfor %}
+                    </div>
                     <div class="chat-content-msg-text">
                         {{ msg.Text }}
                     </div>
@@ -32,19 +39,32 @@
                 {% else %}
                     <div data-first="1" data-msgtype="notread" data-uid="{{ uid }}" data-chatId="{{ chatId }}" data-msgId="{{ msg.Id }}" id="last-msg" class="chat-content-msg chat-msg-not-read chat-msg-not-read-obs chat-msg-not-read-obs-down last-msg">
                 {% endif %}
+                    <div class="chat-content-msg-images">
+                        {% for image in msg.Images %}
+                        <span>
+                            <img src="/{{ image.Path }}">
+                        </span>
+                        {% endfor %}
+                    </div>
                     <div class="chat-content-msg-text">
                         {{ msg.Text }}
                     </div>
                     <div class="chat-content-msg-date">{{ msg.Date }}</div>
                 </div>
             {% endif %}
-        {% endfor %}
+            {% endfor %}
     </div>
-    <form class="chat-form">
-        <textarea id="chat-textarea"></textarea>
+        <div id="chat-form-images" class="chat-form-images">
+        </div>
+    <form method="post" id="chat-form" class="chat-form" enctype="multipart/form-data">
+        <textarea name="text" id="chat-textarea"></textarea>
+        <input id="images" name="images" type="file" multiple>
         <div class="chat-form-menu">
-            <button type="button" id="send">
-                <a>Send</a>
+            <button type="button" id="images-btn">
+                <a><span>Images</span></a>
+            </button>
+            <button type="submit" id="send">
+                <a><span>Send</span></a>
             </button>
         </div>
     </form>

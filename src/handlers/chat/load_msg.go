@@ -83,6 +83,11 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 			panic(err)
 			//return func() { error = err.Error() }
 		}
+		images, err := loadMessageImages(m.Id, db)
+		if err != nil {
+			return func() { error = "Permission dined" }
+		}
+		m.Images = images
 		chatMessages = append(chatMessages, m)
 	}
 	if error != "" {

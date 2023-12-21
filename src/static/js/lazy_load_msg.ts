@@ -113,9 +113,20 @@ interface MsgDynamicData{
 }
 
 function getMsgText(msg, msgData: MsgDynamicData){
+    let chatImages = "";
+    if (msg.Images != null){
+        for (const image of msg.Images) {
+            chatImages += `<span>
+                           <img src="/${image.Path}">
+                       </span>`;
+        }
+    }
     return `
         <div ${msgData.lastMsgData} class="chat-content-msg ${msgData.classes}">
             ${msgData.isReadMy}
+            <div class="chat-content-msg-images">
+                ${chatImages}
+            </div>
             <div class="chat-content-msg-text">
                 ${ msg.Text }
             </div>

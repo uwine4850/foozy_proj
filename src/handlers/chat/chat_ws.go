@@ -21,6 +21,7 @@ const (
 	WsTextMsg
 	WsReadMsg
 	WsError
+	WsImageNsg
 )
 
 type Message struct {
@@ -33,8 +34,9 @@ type Message struct {
 type ActionFunc func(r *http.Request, messageData Message, db *database.Database, msgJson *string)
 
 var actionsMap = map[int]ActionFunc{
-	WsTextMsg: handleWsTextMsg,
-	WsReadMsg: handleWsReadMsg,
+	WsTextMsg:  handleWsTextMsg,
+	WsReadMsg:  handleWsReadMsg,
+	WsImageNsg: handleWsImageNsg,
 }
 
 var chatConnections = make(map[string][]*websocket.Conn)
@@ -48,9 +50,12 @@ func WsHandler(w http.ResponseWriter, r *http.Request, manager interfaces.IManag
 	}
 	ws := manager.CurrentWebsocket()
 	ws.OnClientClose(func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn) {
-		connChatId := connections[conn]
-		chatConnections[connChatId] = utils.RemoveElement(chatConnections[connChatId], conn)
-		delete(connections, conn)
+		once := notification.GetRequestOnce(r)
+		if once == "false" {
+			connChatId := connections[conn]
+			chatConnections[connChatId] = utils.RemoveElement(chatConnections[connChatId], conn)
+			delete(connections, conn)
+		}
 		err := conn.Close()
 		if err != nil {
 			panic(err)
@@ -71,19 +76,22 @@ func WsHandler(w http.ResponseWriter, r *http.Request, manager interfaces.IManag
 // After all this, a message is sent to the client.
 func onConnect(r *http.Request, ws interfaces.IWebsocket, chatId string) func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn) {
 	return func(w http.ResponseWriter, r *http.Request, conn *websocket.Conn) {
-		connections[conn] = chatId
-		chatConnections[chatId] = append(chatConnections[chatId], conn)
-		uid, err := r.Cookie("UID")
-		if err != nil {
-			panic(err)
-		}
-		msgJson, err := newMsgJson(WsConnect, uid.Value, chatId, map[string]string{})
-		if err != nil {
-			panic(err)
-		}
-		err = ws.SendMessage(websocket.TextMessage, []byte(msgJson), conn)
-		if err != nil {
-			panic(err)
+		once := notification.GetRequestOnce(r)
+		if once == "false" {
+			connections[conn] = chatId
+			chatConnections[chatId] = append(chatConnections[chatId], conn)
+			uid, err := r.Cookie("UID")
+			if err != nil {
+				panic(err)
+			}
+			msgJson, err := newMsgJson(WsConnect, uid.Value, chatId, map[string]string{})
+			if err != nil {
+				panic(err)
+			}
+			err = ws.SendMessage(websocket.TextMessage, []byte(msgJson), conn)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 }
@@ -153,8 +161,39 @@ func handleWsTextMsg(r *http.Request, messageData Message, db *database.Database
 		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return
 	}
+	actionsAfterInsertNewMessage(r, msgJson, &messageData, &newMsg, db)
+}
+
+func handleWsImageNsg(r *http.Request, messageData Message, db *database.Database, msgJson *string) {
+	newMsgData := map[string]interface{}{
+		"user":    messageData.Uid,
+		"chat":    messageData.ChatId,
+		"text":    messageData.Msg["Text"],
+		"date":    time.Now(),
+		"is_read": false,
+	}
+	_, err := db.SyncQ().Insert("chat_msg", newMsgData)
+	if err != nil {
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
+		return
+	}
+	newMsg, err := getNewMsg(db, newMsgData)
+	if err != nil {
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
+		return
+	}
+	err = saveMessageImages(messageData.Msg["images"], newMsg["Id"], db)
+	if err != nil {
+		panic(err)
+	}
+	newMsg["images"] = messageData.Msg["images"]
+
+	actionsAfterInsertNewMessage(r, msgJson, &messageData, &newMsg, db)
+}
+
+func actionsAfterInsertNewMessage(r *http.Request, msgJson *string, messageData *Message, newMsg *map[string]string, db *database.Database) {
 	// Increment msg count.
-	err = IncrementChatMsgCountFromDb(r, messageData.ChatId, messageData.Uid, db)
+	err := IncrementChatMsgCountFromDb(r, messageData.ChatId, messageData.Uid, db)
 	if err != nil {
 		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return
@@ -164,7 +203,7 @@ func handleWsTextMsg(r *http.Request, messageData Message, db *database.Database
 		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return
 	}
-	*msgJson, err = newMsgJson(messageData.Type, messageData.Uid, messageData.ChatId, newMsg)
+	*msgJson, err = newMsgJson(messageData.Type, messageData.Uid, messageData.ChatId, *newMsg)
 	if err != nil {
 		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return
@@ -299,6 +338,30 @@ func IncrementChatMsgCountFromDb(r *http.Request, chatId string, sendUid string,
 		return err
 	}
 	err = notification.SendIncrementMsgChatCount(r, recipientUser.Id, chatId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SendTextMessage(r *http.Request, msg *Message) error {
+	msgJson, err := newMsgJson(WsTextMsg, msg.Uid, msg.ChatId, msg.Msg)
+	if err != nil {
+		return err
+	}
+	err = utils.WsSendMessage(r, msgJson, "ws://localhost:8000/chat-ws", true)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SendImageMessage(r *http.Request, msg *Message) error {
+	msgJson, err := newMsgJson(WsImageNsg, msg.Uid, msg.ChatId, msg.Msg)
+	if err != nil {
+		return err
+	}
+	err = utils.WsSendMessage(r, msgJson, "ws://localhost:8000/chat-ws", true)
 	if err != nil {
 		return err
 	}

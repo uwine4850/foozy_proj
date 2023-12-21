@@ -31,11 +31,17 @@
         <div class="profile-buttons">
             {% if user.Id == UID %}
             <button class="profile-button-edit">
-                <a href="/profile/{{ UID }}/edit"><img src="/static/img/edit.svg">Edit</a>
+                <a href="/profile/{{ UID }}/edit">
+                    <img src="/static/img/edit.svg">
+                    <span>Edit</span>
+                </a>
             </button>
             {% else %}
             <button id="profile-button-message" data-chatId="{{ isChatExist }}" class="profile-button-message">
-                <a><img src="/static/img/message.svg">Message</a>
+                <a>
+                    <img src="/static/img/message.svg">
+                    <span>Message</span>
+                </a>
             </button>
             {% endif %}
         </div>

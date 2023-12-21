@@ -52,6 +52,7 @@ func main() {
 	newRouter.Post("/log-out-post", profile.ProfileLogOutPost)
 	newRouter.Get("/chat/<id>", chat.Chat)
 	newRouter.Get("/chat-list", chat.ChatList)
+	newRouter.Post("/receive-msg", chat.ReceiveMessage)
 	newRouter.Post("/create-chat", chat.CreateChatPost)
 	newRouter.Ws("/chat-ws", router.NewWebsocket(router.Upgrader), chat.WsHandler)
 	newRouter.Get("/load-messages", chat.LoadMessages)
