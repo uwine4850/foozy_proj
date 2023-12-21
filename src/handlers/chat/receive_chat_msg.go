@@ -27,6 +27,7 @@ func ReceiveMessage(w http.ResponseWriter, r *http.Request, manager interfaces.I
 		panic(err)
 	}
 	var message Message
+	// Send new text message data to the chat websocket.
 	if fillableMessage.GetOrDef("Text", 0) != "" && formMessage.Images == nil {
 		message = Message{
 			Type:   0,
@@ -39,6 +40,7 @@ func ReceiveMessage(w http.ResponseWriter, r *http.Request, manager interfaces.I
 			panic(err)
 		}
 	}
+	// Send new message data with images to the chat websocket.
 	if formMessage.Images != nil {
 		imagesPaths, err := saveImages(w, &formMessage.Images)
 		if err != nil {
@@ -48,7 +50,7 @@ func ReceiveMessage(w http.ResponseWriter, r *http.Request, manager interfaces.I
 			Type:   0,
 			Uid:    formMessage.Uid[0],
 			ChatId: formMessage.ChatId[0],
-			Msg:    map[string]string{"Text": fillableMessage.GetOrDef("Text", 0), "images": imagesPaths},
+			Msg:    map[string]string{"Text": fillableMessage.GetOrDef("Text", 0), "Images": imagesPaths},
 		}
 		err = SendImageMessage(r, &message)
 		if err != nil {
@@ -58,6 +60,8 @@ func ReceiveMessage(w http.ResponseWriter, r *http.Request, manager interfaces.I
 	return func() {}
 }
 
+// saveImages saves the images and returns a string with the paths to the images.
+// The paths are separated by "\".
 func saveImages(w http.ResponseWriter, images *[]form.FormFile) (string, error) {
 	var paths = make([]string, 0)
 	for i := 0; i < len(*images); i++ {

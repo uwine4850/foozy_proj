@@ -94,7 +94,7 @@ function handleWsImageMsg(message: IMessage, ws: WebSocket){
         classes = "chat-msg-not-read chat-msg-not-read-obs";
     }
     let chatImages = ""
-    for (const image of message.Msg.images.split("\\")) {
+    for (const image of message.Msg.Images.split("\\")) {
         chatImages += `<span>
                            <img src="/${image}">
                        </span>`

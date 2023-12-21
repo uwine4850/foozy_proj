@@ -182,11 +182,11 @@ func handleWsImageNsg(r *http.Request, messageData Message, db *database.Databas
 		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return
 	}
-	err = saveMessageImages(messageData.Msg["images"], newMsg["Id"], db)
+	err = saveMessageImages(messageData.Msg["Images"], newMsg["Id"], db)
 	if err != nil {
 		panic(err)
 	}
-	newMsg["images"] = messageData.Msg["images"]
+	newMsg["Images"] = messageData.Msg["Images"]
 
 	actionsAfterInsertNewMessage(r, msgJson, &messageData, &newMsg, db)
 }
@@ -300,70 +300,4 @@ func getNewMsg(db *database.Database, msgData map[string]interface{}) (map[strin
 	}
 	msgMap := map[string]string{"Id": cm.Id, "UserId": cm.UserId, "Text": cm.Text, "Date": cm.Date, "IsRead": cm.IsRead}
 	return msgMap, nil
-}
-
-// wsError sending the error to the client.
-func wsError(uid string, chatId string, error string) string {
-	msgJson, err := newMsgJson(WsError, uid, chatId, map[string]string{"Error": error})
-	if err != nil {
-		panic(err)
-	}
-	return msgJson
-}
-
-// newMsgJson sending a response to the client in json format.
-func newMsgJson(_type int, uid string, chatId string, msg map[string]string) (string, error) {
-	m := Message{
-		Type:   _type,
-		Uid:    uid,
-		ChatId: chatId,
-		Msg:    msg,
-	}
-	marshal, err := json.Marshal(m)
-	if err != nil {
-		return "", err
-	}
-	return string(marshal), nil
-}
-
-// IncrementChatMsgCountFromDb Increases the number of unread messages of a specific user in a specific chat by 1.
-// sendUid - id of the user who sent the message.
-func IncrementChatMsgCountFromDb(r *http.Request, chatId string, sendUid string, db *database.Database) error {
-	recipientUser, err := GetRecipientUser(chatId, sendUid, db)
-	if err != nil {
-		return err
-	}
-	_, err = db.SyncQ().Query("UPDATE `chat_msg_count` SET `count`= `count` + 1 WHERE user = ? AND chat = ? ;", recipientUser.Id, chatId)
-	if err != nil {
-		return err
-	}
-	err = notification.SendIncrementMsgChatCount(r, recipientUser.Id, chatId)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func SendTextMessage(r *http.Request, msg *Message) error {
-	msgJson, err := newMsgJson(WsTextMsg, msg.Uid, msg.ChatId, msg.Msg)
-	if err != nil {
-		return err
-	}
-	err = utils.WsSendMessage(r, msgJson, "ws://localhost:8000/chat-ws", true)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func SendImageMessage(r *http.Request, msg *Message) error {
-	msgJson, err := newMsgJson(WsImageNsg, msg.Uid, msg.ChatId, msg.Msg)
-	if err != nil {
-		return err
-	}
-	err = utils.WsSendMessage(r, msgJson, "ws://localhost:8000/chat-ws", true)
-	if err != nil {
-		return err
-	}
-	return nil
 }
