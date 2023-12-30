@@ -11,7 +11,6 @@ import (
 )
 
 func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
-	var error string
 	chatId := r.URL.Query().Get("chatid")
 	msgId := r.URL.Query().Get("msgid")
 	_type := r.URL.Query().Get("msgtype")
@@ -19,20 +18,18 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 	handler := r.URL.Query().Get("handler")
 	uid, err := r.Cookie("UID")
 	if err != nil {
-		panic(err)
-		//error = uid.Value
+		return func() { sendJson(map[string]string{"err": err.Error()}, w) }
 	}
 
 	db := conf.DatabaseI
 	err = db.Connect()
 	if err != nil {
-		return func() { error = err.Error() }
+		return func() { sendJson(map[string]string{"err": err.Error()}, w) }
 	}
 	defer func(db *database.Database) {
 		err := db.Close()
 		if err != nil {
-			panic(err)
-			//sendJson(map[string]string{"err": error}, w)
+			sendJson(map[string]string{"err": err.Error()}, w)
 		}
 	}(db)
 
@@ -42,11 +39,10 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		QueryArgs: []interface{}{chatId, uid.Value, uid.Value},
 	}, 1)
 	if err != nil {
-		panic(err)
-		//return func() { error = err.Error() }
+		return func() { sendJson(map[string]string{"err": err.Error()}, w) }
 	}
 	if chat == nil {
-		return func() { error = "Permission dined" }
+		return func() { sendJson(map[string]string{"err": "Permission dined"}, w) }
 	}
 
 	// If this is the first message the message type will be equal to the message type.
@@ -61,16 +57,14 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		_messages, err := db.SyncQ().Query("SELECT * FROM `chat_msg` WHERE chat = ? AND id < ? "+
 			"ORDER BY id DESC LIMIT "+strconv.Itoa(conf.LoadMessages), chatId, msgId)
 		if err != nil {
-			panic(err)
-			//return func() { error = err.Error() }
+			return func() { sendJson(map[string]string{"err": err.Error()}, w) }
 		}
 		messages = _messages
 	case "notread":
 		_messages, err := db.SyncQ().Query("SELECT * FROM `chat_msg` WHERE chat = ? AND id > ? "+
 			" LIMIT "+strconv.Itoa(conf.LoadMessages), chatId, msgId)
 		if err != nil {
-			panic(err)
-			//return func() { error = err.Error() }
+			return func() { sendJson(map[string]string{"err": err.Error()}, w) }
 		}
 		messages = _messages
 	}
@@ -80,21 +74,16 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		var m ChatMessage
 		err := dbutils.FillStructFromDb(messages[i], &m)
 		if err != nil {
-			panic(err)
-			//return func() { error = err.Error() }
+			return func() { sendJson(map[string]string{"err": err.Error()}, w) }
 		}
 		images, err := loadMessageImages(m.Id, db)
 		if err != nil {
-			return func() { error = "Permission dined" }
+			return func() { sendJson(map[string]string{"err": "Permission dined"}, w) }
 		}
 		m.Images = images
 		chatMessages = append(chatMessages, m)
 	}
-	if error != "" {
-		sendJson(map[string]string{"err": error}, w)
-	} else {
-		sendJson(map[string]interface{}{"messages": chatMessages, "chatId": chatId, "uid": uid.Value, "type": _type, "first": first}, w)
-	}
+	sendJson(map[string]interface{}{"messages": chatMessages, "chatId": chatId, "uid": uid.Value, "type": _type, "first": first}, w)
 	return func() {}
 }
 

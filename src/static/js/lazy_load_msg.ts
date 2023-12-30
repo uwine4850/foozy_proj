@@ -1,6 +1,7 @@
 import {LazyLoad} from "./lazy_load";
 import {observeMessages} from "./observe_messages";
 import {IConnectData} from "./chat_ws";
+import {handleError} from "./chat/chat";
 
 export function runLazyLoadMsg(connectData: IConnectData){
     let l = new LazyLoad("last-msg", ["first", "msgtype", "uid", "chatid", "msgid"], "/load-messages")
@@ -11,8 +12,8 @@ export function runLazyLoadMsg(connectData: IConnectData){
     l.setValue("handler", "read");
     l.run(function (response){
         const parentElement = document.getElementById('chat-content');
-        if (response["error"]){
-            console.log(response["error"])
+        if (response["err"]){
+            handleError(response["err"])
             return
         }
         const scrollTopBefore = parentElement.scrollTop;
@@ -64,8 +65,8 @@ export function runLazyLoadNotReadMsg(connectData: IConnectData) {
     l.setValue("handler", "notread");
     l.run(function (response){
         const parentElement = document.getElementById('chat-content');
-        if (response["error"]){
-            console.log(response["error"])
+        if (response["err"]){
+            handleError(response["err"])
             return
         }
         const scrollTopBefore = parentElement.scrollTop;

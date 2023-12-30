@@ -2,6 +2,7 @@
 
 .base-content{
   display: flex;
+  position: relative;
 }
 
 .base-left-menu{
@@ -11,6 +12,7 @@
   margin-left: 50px;
   margin-top: 20px;
   border-radius: 5px;
+  position: relative;
 }
 
 .base-right-side-scroll{
@@ -227,5 +229,35 @@
     span{
       margin: auto;
     }
+  }
+}
+
+// NOTIFICATION POPUP
+.pop-up-panel-bg.pop-up-panel-bg-notification{
+  width: 100%;
+  position: absolute;
+}
+.pop-up-panel.notification-pop-up{
+  margin-top: 10px;
+  background-color: $primaryBgColor;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  .pop-up-activate{
+    margin-left: auto;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    padding: 5px;
+    height: fit-content;
+  }
+  .hide-pop-up-activate{
+    display: none;
+  }
+  .pop-up-content{
+    background-color: $primaryBgColor;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    padding-top: 0;
   }
 }

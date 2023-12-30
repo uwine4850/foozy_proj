@@ -8,10 +8,6 @@
 }
 
 .pop-up-panel-bg{
-  .pop-up-panel{
-    position: relative;
-    z-index: 100;
-  }
   .pop-up-bg{
     position: absolute;
     background: rgba(0, 0, 0, 0.2);
@@ -24,4 +20,10 @@
   .pop-up-bg-hide{
     display: none;
   }
+}
+
+.pop-up-panel{
+  position: relative;
+  z-index: 100;
+  color: black;
 }

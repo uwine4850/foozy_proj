@@ -188,3 +188,23 @@
     }
   }
 }
+
+.chat-pop-up.chat-pop-up{
+  position: absolute;
+  left: calc(50% - 250px);
+  top: 20%;
+  .pop-up-activate{
+    display: none;
+  }
+  .chat-pop-up-content{
+    background-color: $primaryBgColor;
+    border-radius: 5px;
+    width: 500px;
+    height: fit-content;
+    font-size: 1.2rem;
+    font-weight: 500;
+    -webkit-box-shadow: 0 0 37px -13px rgba(0,0,0,0.75);
+    -moz-box-shadow: 0 0 37px -13px rgba(0,0,0,0.75);
+    box-shadow: 0 0 37px -13px rgba(0,0,0,0.75);
+  }
+}

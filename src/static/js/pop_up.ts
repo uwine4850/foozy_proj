@@ -22,9 +22,9 @@ export class PopUp {
     }
 
     private processingBg(pop_up_bg: HTMLElement){
-        pop_up_bg.onclick = function (){
+        pop_up_bg.onclick = () => {
             let parent = pop_up_bg.parentElement;
-            let panel = parent.getElementsByClassName("pop-up-panel")[0] as HTMLElement;
+            let panel = parent.getElementsByClassName(this.className)[0] as HTMLElement;
             let button = panel.getElementsByClassName("pop-up-activate")[0] as HTMLButtonElement;
             button.click();
         }

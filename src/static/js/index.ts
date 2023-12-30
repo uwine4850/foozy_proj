@@ -13,15 +13,22 @@ runIfExist(document.getElementById("pp-del-avatar-label"), function (el){
    }
 });
 
-let popUp = new PopUp("pop-up-panel", true);
-popUp.onClick(function (popUp){
-   popUp.classList.toggle("pop-up-hide");
+let popUpNotification = new PopUp("notification-pop-up", false);
+popUpNotification.onClick(function (popUp){
+    document.getElementById("pop-up-activate").classList.toggle("hide-pop-up-activate");
+    popUp.classList.toggle("pop-up-hide");
 });
-popUp.start();
+popUpNotification.start();
 
 const regex = /^\/chat\/\d+$/;
 RunWsNotification();
 if (regex.test(window.location.pathname)){
+    let popUp = new PopUp("chat-pop-up", true);
+    popUp.onClick(function (popUp){
+        popUp.classList.toggle("pop-up-hide");
+    });
+    popUp.start();
+
     let connectData = RunWs();
     OnImagesSelect();
     runLazyLoadMsg(connectData);

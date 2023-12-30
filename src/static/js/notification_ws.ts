@@ -36,7 +36,7 @@ function handlerConnect(notification: INotification, ws: WebSocket){
 }
 
 function handlerError(notification: INotification, ws: WebSocket){
-    console.log(notification.Msg.error);
+    notificationPopUp(notification.Msg.error);
 }
 
 function handlerWsIncrementChatMsgCount(notification: INotification, ws: WebSocket){
@@ -91,4 +91,9 @@ function incrementNotificationCount(increment: boolean){
         }
     }
     notificationCount.innerText = String(number);
+}
+
+function notificationPopUp(text: string){
+    document.getElementById("notification-pop-up-content").innerHTML = text;
+    document.getElementById("pop-up-activate").click();
 }

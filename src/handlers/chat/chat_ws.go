@@ -82,11 +82,11 @@ func onConnect(r *http.Request, ws interfaces.IWebsocket, chatId string) func(w 
 			chatConnections[chatId] = append(chatConnections[chatId], conn)
 			uid, err := r.Cookie("UID")
 			if err != nil {
-				panic(err)
+				ws.SendMessage(websocket.TextMessage, []byte(wsError(uid.Value, chatId, err.Error())), conn)
 			}
 			msgJson, err := newMsgJson(WsConnect, uid.Value, chatId, map[string]string{})
 			if err != nil {
-				panic(err)
+				ws.SendMessage(websocket.TextMessage, []byte(wsError(uid.Value, chatId, err.Error())), conn)
 			}
 			err = ws.SendMessage(websocket.TextMessage, []byte(msgJson), conn)
 			if err != nil {
@@ -105,27 +105,31 @@ func onMessage(r *http.Request, ws interfaces.IWebsocket, mu *sync.Mutex) func(m
 		defer mu.Unlock()
 		var msg Message
 		var msgJson string
+		var db *database.Database
+		var actionFunc ActionFunc
+		var ok bool
+
 		err := json.Unmarshal(msgData, &msg)
 		if err != nil {
 			msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
-			return
+			goto sendMessage
 		}
-		db := conf.DatabaseI
+		db = conf.DatabaseI
 		err = db.Connect()
 		if err != nil {
 			msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
-			return
+			goto sendMessage
 		}
-		actionFunc, ok := actionsMap[msg.Type]
+		actionFunc, ok = actionsMap[msg.Type]
 		if ok {
 			actionFunc(r, msg, db, &msgJson)
 		}
 		err = db.Close()
 		if err != nil {
 			msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
-			return
 		}
 		// Sending a message to a specific chat room.
+	sendMessage:
 		for i := 0; i < len(chatConnections[msg.ChatId]); i++ {
 			if msgJson == "" {
 				return
@@ -184,7 +188,8 @@ func handleWsImageNsg(r *http.Request, messageData Message, db *database.Databas
 	}
 	err = saveMessageImages(messageData.Msg["Images"], newMsg["Id"], db)
 	if err != nil {
-		panic(err)
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
+		return
 	}
 	newMsg["Images"] = messageData.Msg["Images"]
 
@@ -235,9 +240,8 @@ func handleWsReadMsg(r *http.Request, messageData Message, db *database.Database
 	}
 	err := globalDecrementMessages(r, messageData.Uid, messageData.ChatId, db)
 	if err != nil {
-		panic(err)
-		//*msgJson = wsError(msg.Uid, msg.ChatId, decMsgCount.Error.Error())
-		//return
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, decMsgCount.Error.Error())
+		return
 	}
 	*msgJson, err = newMsgJson(messageData.Type, messageData.Uid, messageData.ChatId, messageData.Msg)
 	if err != nil {

@@ -61,13 +61,18 @@ func WsHandler(w http.ResponseWriter, r *http.Request, manager interfaces.IManag
 	ws.OnMessage(func(messageType int, msgData []byte, conn *websocket.Conn) {
 		var messageJsonNotification []byte
 		var notification Notification
+		isError := false
 		err := json.Unmarshal(msgData, &notification)
 		if err != nil {
-			panic(err)
+			messageJsonNotification, _ = notificationError(err)
+			isError = true
 		}
-		actionFunc, ok := actionsMap[notification.Type]
-		if ok {
-			actionFunc(&messageJsonNotification, &notification, conn)
+
+		if !isError {
+			actionFunc, ok := actionsMap[notification.Type]
+			if ok {
+				actionFunc(&messageJsonNotification, &notification, conn)
+			}
 		}
 		for i := 0; i < len(notification.UserIds); i++ {
 			for key, value := range connections {
@@ -103,10 +108,7 @@ func handleWsIncrementChatMsgCount(messageJsonData *[]byte, notificationData *No
 func handleWsGlobalIncrementMsg(messageJsonData *[]byte, notificationData *Notification, conn *websocket.Conn) {
 	nj, err := notificationJson(notificationData.Type, notificationData.UserIds, notificationData.Msg)
 	if err != nil {
-		njError, err := notificationError(err)
-		if err != nil {
-			panic(err)
-		}
+		njError, _ := notificationError(err)
 		*messageJsonData = njError
 		return
 	}
@@ -116,10 +118,7 @@ func handleWsGlobalIncrementMsg(messageJsonData *[]byte, notificationData *Notif
 func handleWsGlobalDecrementMsg(messageJsonData *[]byte, notificationData *Notification, conn *websocket.Conn) {
 	nj, err := notificationJson(notificationData.Type, notificationData.UserIds, notificationData.Msg)
 	if err != nil {
-		njError, err := notificationError(err)
-		if err != nil {
-			panic(err)
-		}
+		njError, _ := notificationError(err)
 		*messageJsonData = njError
 		return
 	}

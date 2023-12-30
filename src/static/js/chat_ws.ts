@@ -1,6 +1,6 @@
 import {observeMessages} from "./observe_messages";
 import {runLazyLoadMsg, runLazyLoadNotReadMsg} from "./lazy_load_msg";
-import {SendAjaxChatMessage} from "./chat/chat";
+import {handleError, SendAjaxChatMessage} from "./chat/chat";
 
 export enum MessageType{
     WsConnect,
@@ -80,7 +80,7 @@ function handleWsReadMsg(message: IMessage, ws: WebSocket){
 }
 
 function handleWsError(message: IMessage, ws: WebSocket){
-    console.log("Error: ", message.Msg.Error);
+    handleError(message.Msg.Error)
 }
 
 function handleWsImageMsg(message: IMessage, ws: WebSocket){
