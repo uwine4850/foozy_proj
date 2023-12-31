@@ -118,3 +118,19 @@ func chatExist(id any, uid any, db *database.Database) (int, error) {
 	}
 	return parseInt, nil
 }
+
+func GetUserDataById(id string, db *database.Database) (*UserData, error) {
+	userData, err := db.SyncQ().QB().Select("*", "auth").Where("id", "=", id).Ex()
+	if err != nil {
+		return nil, err
+	}
+	if len(userData) == 0 {
+		return nil, err
+	}
+	var user UserData
+	err = dbutils.FillStructFromDb(userData[0], &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}

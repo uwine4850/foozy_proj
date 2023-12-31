@@ -165,6 +165,14 @@ func handleWsTextMsg(r *http.Request, messageData Message, db *database.Database
 		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return
 	}
+
+	// Send popup message
+	err = SendPopUpMessageNotification(r, &messageData, db)
+	if err != nil {
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
+		return
+	}
+
 	actionsAfterInsertNewMessage(r, msgJson, &messageData, &newMsg, db)
 }
 
@@ -192,6 +200,12 @@ func handleWsImageNsg(r *http.Request, messageData Message, db *database.Databas
 		return
 	}
 	newMsg["Images"] = messageData.Msg["Images"]
+
+	err = SendPopUpMessageNotification(r, &messageData, db)
+	if err != nil {
+		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
+		return
+	}
 
 	actionsAfterInsertNewMessage(r, msgJson, &messageData, &newMsg, db)
 }

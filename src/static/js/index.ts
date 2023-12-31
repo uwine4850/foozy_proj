@@ -14,14 +14,14 @@ runIfExist(document.getElementById("pp-del-avatar-label"), function (el){
 });
 
 let popUpNotification = new PopUp("notification-pop-up", false);
-popUpNotification.onClick(function (popUp){
-    document.getElementById("pop-up-activate").classList.toggle("hide-pop-up-activate");
+popUpNotification.onClick(function (popUp, popUpActivate){
+    popUpActivate.classList.toggle("hide-pop-up-activate");
     popUp.classList.toggle("pop-up-hide");
 });
 popUpNotification.start();
 
-const regex = /^\/chat\/\d+$/;
 RunWsNotification();
+const regex = /^\/chat\/\d+$/;
 if (regex.test(window.location.pathname)){
     let popUp = new PopUp("chat-pop-up", true);
     popUp.onClick(function (popUp){

@@ -80,7 +80,7 @@ function handleWsReadMsg(message: IMessage, ws: WebSocket){
 }
 
 function handleWsError(message: IMessage, ws: WebSocket){
-    handleError(message.Msg.Error)
+    handleError(message.Msg.Error);
 }
 
 function handleWsImageMsg(message: IMessage, ws: WebSocket){

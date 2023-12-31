@@ -11,13 +11,13 @@
 export class PopUp {
     private readonly className: string;
     private readonly isBackground: boolean;
-    private _onClick: (popUp: HTMLElement) => void;
+    private _onClick: (popUp: HTMLElement, popUpActivate: HTMLElement) => void;
     constructor(className: string, isBackground: boolean) {
         this.className = className;
         this.isBackground = isBackground;
     }
 
-    public onClick(click: (popUp: HTMLElement) => void){
+    public onClick(click: (popUp: HTMLElement, popUpActivate: HTMLElement) => void){
         this._onClick = click;
     }
 
@@ -45,7 +45,7 @@ export class PopUp {
                     this.processingBg(pop_up_bg);
                     pop_up_bg.classList.toggle("pop-up-bg-hide");
                 }
-                this._onClick(s);
+                this._onClick(s, popUpActivate[0] as HTMLElement);
             })
         }
     }

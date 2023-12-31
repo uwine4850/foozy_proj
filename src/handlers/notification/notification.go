@@ -14,6 +14,7 @@ const (
 	WsIncrementChatMsgCount
 	WsGlobalIncrementMsg
 	WsGlobalDecrementMsg
+	WsPopUpMessage
 )
 
 type Notification struct {
@@ -28,6 +29,7 @@ var actionsMap = map[int]ActionFunc{
 	WsIncrementChatMsgCount: handleWsIncrementChatMsgCount,
 	WsGlobalIncrementMsg:    handleWsGlobalIncrementMsg,
 	WsGlobalDecrementMsg:    handleWsGlobalDecrementMsg,
+	WsPopUpMessage:          handleWsPopUpMessage,
 }
 
 var connections = make(map[*websocket.Conn]string)
@@ -125,6 +127,16 @@ func handleWsGlobalDecrementMsg(messageJsonData *[]byte, notificationData *Notif
 	*messageJsonData = nj
 }
 
+func handleWsPopUpMessage(messageJsonData *[]byte, notificationData *Notification, conn *websocket.Conn) {
+	nj, err := notificationJson(notificationData.Type, notificationData.UserIds, notificationData.Msg)
+	if err != nil {
+		njError, _ := notificationError(err)
+		*messageJsonData = njError
+		return
+	}
+	*messageJsonData = nj
+}
+
 func notificationJson(_type int, usersIds []string, msg map[string]string) ([]byte, error) {
 	n := Notification{
 		Type:    _type,
@@ -177,6 +189,18 @@ func SendGlobalIncrementMsg(r *http.Request, userId string) error {
 
 func SendGlobalDecrementMsg(r *http.Request, userId string) error {
 	nj, err := notificationJson(WsGlobalDecrementMsg, []string{userId}, map[string]string{})
+	if err != nil {
+		return err
+	}
+	err = utils.WsSendMessage(r, string(nj), "ws://localhost:8000/notification-ws", true)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SendPopUpMessage(r *http.Request, userId string, messageData *map[string]string) error {
+	nj, err := notificationJson(WsPopUpMessage, []string{userId}, *messageData)
 	if err != nil {
 		return err
 	}

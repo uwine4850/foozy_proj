@@ -4,6 +4,7 @@ export enum NotificationType{
     WsIncrementChatMsgCount,
     WsGlobalIncrementMsg,
     WsGlobalDecrementMsg,
+    WsPopUpMessage
 }
 
 export interface INotification{
@@ -21,6 +22,14 @@ const MsgActions: MsgActions = {
     [NotificationType.WsIncrementChatMsgCount]: handlerWsIncrementChatMsgCount,
     [NotificationType.WsGlobalIncrementMsg]: handlerWsGlobalIncrementMsg,
     [NotificationType.WsGlobalDecrementMsg]: handlerWsGlobalDecrementMsg,
+    [NotificationType.WsPopUpMessage]: handlerWsPopUpMessage,
+}
+
+function handlerWsPopUpMessage(notification: INotification, ws: WebSocket){
+    const regex = /^\/chat\/\d+$/;
+    if (!regex.test(window.location.pathname)){
+        messagePopUpNotification(notification.Msg);
+    }
 }
 
 function handlerWsGlobalDecrementMsg(notification: INotification, ws: WebSocket){
@@ -96,4 +105,39 @@ function incrementNotificationCount(increment: boolean){
 function notificationPopUp(text: string){
     document.getElementById("notification-pop-up-content").innerHTML = text;
     document.getElementById("pop-up-activate").click();
+}
+
+function messagePopUpNotification(messageData: Record<string, string>){
+    document.getElementById("npp-user-avatar").innerHTML = "";
+    document.getElementById("npp-user-name").innerHTML = "";
+    document.getElementById("npp-msg-images").innerHTML = "";
+    document.getElementById("npp-message-text").innerHTML = "";
+
+    const userJsonData = JSON.parse(messageData.User);
+    if (userJsonData.Avatar){
+        document.getElementById("npp-user-avatar").innerHTML = `<img src="${userJsonData.Avatar}">`;
+    } else {
+        document.getElementById("npp-user-avatar").innerHTML = `<img src="/static/img/default.jpeg">`;
+    }
+    document.getElementById("npp-user-name").innerHTML = userJsonData.Name;
+    if (messageData.Images){
+        let images = messageData.Images.split("\\");
+        for (let i = 0; i < images.length; i++) {
+            if (i < 3){
+                document.getElementById("npp-msg-images").innerHTML += `
+            <span>
+                <img src="${images[i]}">
+            </span>
+            `
+            } else {
+                document.getElementById("npp-message-more-images").classList.remove("npp-message-more-images-hide");
+                document.getElementById("npp-message-more-images").innerHTML = `+${images.length-i} images`;
+                break;
+            }
+        }
+    }
+    document.getElementById("npp-message-text").innerHTML = messageData.Text;
+    if (document.getElementById("message-pop-up-activate").classList.contains("hide-pop-up-activate")){
+        document.getElementById("message-pop-up-activate").click();
+    }
 }

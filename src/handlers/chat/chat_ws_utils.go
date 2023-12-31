@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy_proj/src/handlers/notification"
+	"github.com/uwine4850/foozy_proj/src/handlers/profile"
 	"github.com/uwine4850/foozy_proj/src/utils"
 	"net/http"
 	"strconv"
@@ -94,6 +95,28 @@ func SendImageMessage(r *http.Request, msg *Message) error {
 		return err
 	}
 	err = utils.WsSendMessage(r, msgJson, "ws://localhost:8000/chat-ws", true)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SendPopUpMessageNotification(r *http.Request, messageData *Message, db *database.Database) error {
+	user, err := profile.GetUserDataById(messageData.Uid, db)
+	if err != nil {
+		return err
+	}
+	recipientUser, err := GetRecipientUser(messageData.ChatId, messageData.Uid, db)
+	data := make(map[string]string, len(messageData.Msg))
+	for key, value := range messageData.Msg {
+		data[key] = value
+	}
+	userBytes, err := json.Marshal(user)
+	if err != nil {
+		return err
+	}
+	data["User"] = string(userBytes)
+	err = notification.SendPopUpMessage(r, recipientUser.Id, &data)
 	if err != nil {
 		return err
 	}

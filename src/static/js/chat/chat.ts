@@ -61,5 +61,5 @@ export function OnImagesSelect(){
 
 export function handleError(text: string){
     document.getElementById("chat-pop-up-content").innerHTML = text;
-    document.getElementById("pop-up-activate").click();
+    document.getElementById("chat-pop-up-activate").click();
 }
