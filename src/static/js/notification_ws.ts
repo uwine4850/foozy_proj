@@ -4,7 +4,8 @@ export enum NotificationType{
     WsIncrementChatMsgCount,
     WsGlobalIncrementMsg,
     WsGlobalDecrementMsg,
-    WsPopUpMessage
+    WsPopUpMessage,
+    WsNewChat,
 }
 
 export interface INotification{
@@ -23,6 +24,33 @@ const MsgActions: MsgActions = {
     [NotificationType.WsGlobalIncrementMsg]: handlerWsGlobalIncrementMsg,
     [NotificationType.WsGlobalDecrementMsg]: handlerWsGlobalDecrementMsg,
     [NotificationType.WsPopUpMessage]: handlerWsPopUpMessage,
+    [NotificationType.WsNewChat]: handlerWsNewChat,
+}
+
+function handlerWsNewChat(notification: INotification, ws: WebSocket){
+    if (window.location.pathname != "/chat-list"){
+        return
+    }
+    let user = JSON.parse(notification.Msg.User);
+    let avatar = "/static/img/default.jpeg";
+    if (user.Avatar != ""){
+        avatar = user.Avatar;
+    }
+    let chat_list = document.getElementById("chat-list");
+    chat_list.insertAdjacentHTML("afterbegin", `
+        <a data-chatid="${notification.Msg.ChatId}" href="/chat/${notification.Msg.ChatId}" class="chat-list-item">
+        <div class="chat-list-user">
+            <div class="chat-list-user-avatar">
+                <img src="${avatar}" alt="">
+            </div>
+            <div class="chat-list-user-data">
+                <div class="chat-list-user-username">@${user.Username}</div>
+                <div id="chat-list-user-msg" class="chat-list-user-msg">${notification.Msg.Text}</div>
+            </div>
+        </div>
+        <div id="chat-list-user-msg-count" class="chat-list-user-msg-count"></div>
+    </a>
+    `)
 }
 
 function handlerWsPopUpMessage(notification: INotification, ws: WebSocket){
@@ -60,6 +88,8 @@ function handlerWsIncrementChatMsgCount(notification: INotification, ws: WebSock
             num++;
         }
         countEl.innerHTML = String(num);
+        // Change last message text
+        chat.querySelector("#chat-list-user-msg").innerHTML = notification.Msg.Text;
     }
 }
 

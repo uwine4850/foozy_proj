@@ -1,12 +1,15 @@
 package chat
 
 import (
+	"encoding/json"
 	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router"
 	"github.com/uwine4850/foozy/pkg/router/form"
 	"github.com/uwine4850/foozy_proj/src/conf"
+	"github.com/uwine4850/foozy_proj/src/handlers/notification"
+	"github.com/uwine4850/foozy_proj/src/handlers/profile"
 	"net/http"
 	"strconv"
 	"time"
@@ -73,14 +76,6 @@ func CreateChatPost(w http.ResponseWriter, r *http.Request, manager interfaces.I
 		if err != nil {
 			return func() { router.ServerError(w, err.Error()) }
 		}
-		err = insertMsgCount(chatId, uid.Value, chatF.UserId[0], db)
-		if err != nil {
-			return func() { router.ServerError(w, err.Error()) }
-		}
-		err = IncrementChatMsgCountFromDb(r, strconv.Itoa(chatId), uid.Value, db)
-		if err != nil {
-			router.ServerError(w, err.Error())
-		}
 		_, err = db.SyncQ().Insert("chat_msg", map[string]interface{}{
 			"user":    uid.Value,
 			"chat":    chatId,
@@ -90,6 +85,18 @@ func CreateChatPost(w http.ResponseWriter, r *http.Request, manager interfaces.I
 		})
 		if err != nil {
 			return func() { router.ServerError(w, err.Error()) }
+		}
+		err = insertMsgCount(chatId, uid.Value, chatF.UserId[0], db)
+		if err != nil {
+			return func() { router.ServerError(w, err.Error()) }
+		}
+		err = newChat(r, strconv.Itoa(chatId), uid.Value, chatF.UserId[0], chatF.MsgText[0], db)
+		if err != nil {
+			return func() { router.ServerError(w, err.Error()) }
+		}
+		err = IncrementChatMsgCountFromDb(r, strconv.Itoa(chatId), uid.Value, chatF.MsgText[0], db)
+		if err != nil {
+			router.ServerError(w, err.Error())
 		}
 		return func() { http.Redirect(w, r, "/chat/"+strconv.Itoa(chatId), http.StatusFound) }
 	}
@@ -107,6 +114,30 @@ func insertMsgCount(chatId int, uid1 string, uid2 string, db *database.Database)
 	}
 	insertData["user"] = uid2
 	_, err = db.SyncQ().Insert("chat_msg_count", insertData)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func newChat(r *http.Request, chatId string, createUID string, uid string, text string, db *database.Database) error {
+	messageData := make(map[string]string)
+	userDataById, err := profile.GetUserDataById(createUID, db)
+	if err != nil {
+		return err
+	}
+	userDataByIdJson, err := json.Marshal(userDataById)
+	if err != nil {
+		return err
+	}
+	messageData["User"] = string(userDataByIdJson)
+	messageData["Text"] = text
+	messageData["ChatId"] = chatId
+	err = notification.SendNewChat(r, uid, &messageData)
+	if err != nil {
+		return err
+	}
+	err = notification.SendGlobalIncrementMsg(r, uid)
 	if err != nil {
 		return err
 	}

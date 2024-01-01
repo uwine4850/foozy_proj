@@ -145,7 +145,7 @@ func onMessage(r *http.Request, ws interfaces.IWebsocket, mu *sync.Mutex) func(m
 // actionsAfterInsertNewMessage function is used to start similar actions after sending a message.
 func actionsAfterInsertNewMessage(r *http.Request, msgJson *string, messageData *Message, newMsg *map[string]string, db *database.Database) {
 	// Increment msg count.
-	err := chat.IncrementChatMsgCountFromDb(r, messageData.ChatId, messageData.Uid, db)
+	err := chat.IncrementChatMsgCountFromDb(r, messageData.ChatId, messageData.Uid, messageData.Msg["Text"], db)
 	if err != nil {
 		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return

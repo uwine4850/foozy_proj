@@ -1,7 +1,7 @@
 {% extends "t2/base.html" %}
 
 {% block cont %}
-<div class="chat-list">
+<div id="chat-list" class="chat-list">
     {% for chatInfo in chatsInfo %}
     <a data-chatid="{{ chatInfo.Chat.Id }}" href="/chat/{{ chatInfo.Chat.Id }}" class="chat-list-item">
         <div class="chat-list-user">
@@ -16,7 +16,7 @@
             {% endif %}
             <div class="chat-list-user-data">
                 <div class="chat-list-user-username">@{{ chatInfo.User.Username }}</div>
-                <div class="chat-list-user-msg">{{ chatInfo.LastMsg.Text }}</div>
+                <div id="chat-list-user-msg" class="chat-list-user-msg">{{ chatInfo.LastMsg.Text }}</div>
             </div>
         </div>
         <div id="chat-list-user-msg-count" class="chat-list-user-msg-count">

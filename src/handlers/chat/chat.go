@@ -180,7 +180,7 @@ func loadMessageImages(parentMessageId string, db *database.Database) ([]Message
 
 // IncrementChatMsgCountFromDb Increases the number of unread messages of a specific user in a specific chat by 1.
 // sendUid - id of the user who sent the message.
-func IncrementChatMsgCountFromDb(r *http.Request, chatId string, sendUid string, db *database.Database) error {
+func IncrementChatMsgCountFromDb(r *http.Request, chatId string, sendUid string, msgText string, db *database.Database) error {
 	recipientUser, err := GetRecipientUser(chatId, sendUid, db)
 	if err != nil {
 		return err
@@ -189,7 +189,7 @@ func IncrementChatMsgCountFromDb(r *http.Request, chatId string, sendUid string,
 	if err != nil {
 		return err
 	}
-	err = notification.SendIncrementMsgChatCount(r, recipientUser.Id, chatId)
+	err = notification.SendIncrementMsgChatCount(r, recipientUser.Id, chatId, msgText)
 	if err != nil {
 		return err
 	}
