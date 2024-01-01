@@ -40,7 +40,7 @@ func CreateChatPost(w http.ResponseWriter, r *http.Request, manager interfaces.I
 		return func() { router.ServerError(w, err.Error()) }
 	}
 
-	db := conf.DatabaseI
+	db := conf.NewDb()
 	err = db.Connect()
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }

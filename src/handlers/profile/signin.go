@@ -44,7 +44,7 @@ func SignInPost(w http.ResponseWriter, r *http.Request, manager interfaces.IMana
 		return func() { router.ServerError(w, err.Error()) }
 	}
 	// Connect to database.
-	db := conf.DatabaseI
+	db := conf.NewDb()
 	err = db.Connect()
 	if err != nil {
 		return func() { router.RedirectError(w, r, "/sign-in", err.Error(), manager) }

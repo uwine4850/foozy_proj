@@ -6,6 +6,7 @@ import (
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router"
 	"github.com/uwine4850/foozy_proj/src/conf"
+	"github.com/uwine4850/foozy_proj/src/handlers/notification"
 	"github.com/uwine4850/foozy_proj/src/handlers/profile"
 	"net/http"
 	"strconv"
@@ -41,7 +42,7 @@ func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) f
 		panic(err)
 	}
 
-	db := conf.DatabaseI
+	db := conf.NewDb()
 	err = db.Connect()
 	if err != nil {
 		panic(err)
@@ -175,4 +176,22 @@ func loadMessageImages(parentMessageId string, db *database.Database) ([]Message
 		messageImages = append(messageImages, mi)
 	}
 	return messageImages, nil
+}
+
+// IncrementChatMsgCountFromDb Increases the number of unread messages of a specific user in a specific chat by 1.
+// sendUid - id of the user who sent the message.
+func IncrementChatMsgCountFromDb(r *http.Request, chatId string, sendUid string, db *database.Database) error {
+	recipientUser, err := GetRecipientUser(chatId, sendUid, db)
+	if err != nil {
+		return err
+	}
+	_, err = db.SyncQ().Query("UPDATE `chat_msg_count` SET `count`= `count` + 1 WHERE user = ? AND chat = ? ;", recipientUser.Id, chatId)
+	if err != nil {
+		return err
+	}
+	err = notification.SendIncrementMsgChatCount(r, recipientUser.Id, chatId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

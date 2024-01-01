@@ -20,7 +20,7 @@ func ProfileEdit(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 	if !editPermission(w, r, manager) {
 		return func() {}
 	}
-	db := conf.DatabaseI
+	db := conf.NewDb()
 	err := db.Connect()
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
@@ -85,12 +85,12 @@ func ProfileEditPost(w http.ResponseWriter, r *http.Request, manager interfaces.
 		return func() { router.RedirectError(w, r, fmt.Sprintf("/profile/%s/edit", uid), err.Error(), manager) }
 	}
 	var fillProfileEditForm editFormData
-	err = form.FillStructFromForm(frm, form.NewFillableFormStruct(&fillProfileEditForm), []string{})
+	fillableProfileForm := form.NewFillableFormStruct(&fillProfileEditForm)
+	err = form.FillStructFromForm(frm, fillableProfileForm, []string{})
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
 	fillProfileEditForm.DelAvatar = frm.Value("del_avatar")
-
 	// Save avatar
 	if fillProfileEditForm.DelAvatar == "" {
 		_, fileHeader, err := frm.File("avatar")
@@ -108,7 +108,7 @@ func ProfileEditPost(w http.ResponseWriter, r *http.Request, manager interfaces.
 	}
 
 	// Update profile
-	db := conf.DatabaseI
+	db := conf.NewDb()
 	err = db.Connect()
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
@@ -120,8 +120,8 @@ func ProfileEditPost(w http.ResponseWriter, r *http.Request, manager interfaces.
 		}
 	}(db)
 	updSlice := []dbutils.DbEquals{
-		{"name", fillProfileEditForm.Name[0]},
-		{"description", fillProfileEditForm.Description[0]},
+		{"name", fillableProfileForm.GetOrDef("Name", 0)},
+		{"description", fillableProfileForm.GetOrDef("Description", 0)},
 	}
 	// Delete avatar
 	user, err := db.SyncQ().Select([]string{"*"}, "auth", dbutils.WHEquals(map[string]interface{}{

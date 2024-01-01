@@ -1,4 +1,4 @@
-package chat
+package chatws
 
 import (
 	"encoding/json"
@@ -9,11 +9,11 @@ import (
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router"
 	"github.com/uwine4850/foozy_proj/src/conf"
+	"github.com/uwine4850/foozy_proj/src/handlers/chat"
 	"github.com/uwine4850/foozy_proj/src/handlers/notification"
 	"github.com/uwine4850/foozy_proj/src/utils"
 	"net/http"
 	"sync"
-	"time"
 )
 
 const (
@@ -114,7 +114,7 @@ func onMessage(r *http.Request, ws interfaces.IWebsocket, mu *sync.Mutex) func(m
 			msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
 			goto sendMessage
 		}
-		db = conf.DatabaseI
+		db = conf.NewDb()
 		err = db.Connect()
 		if err != nil {
 			msgJson = wsError(msg.Uid, msg.ChatId, err.Error())
@@ -142,77 +142,10 @@ func onMessage(r *http.Request, ws interfaces.IWebsocket, mu *sync.Mutex) func(m
 	}
 }
 
-// handleWsTextMsg processing a message sent to the chat room.
-// The message is saved to the database, then parsed and sent back to the client.
-func handleWsTextMsg(r *http.Request, messageData Message, db *database.Database, msgJson *string) {
-	if messageData.Msg["Text"] == "" {
-		return
-	}
-	newMsgData := map[string]interface{}{
-		"user":    messageData.Uid,
-		"chat":    messageData.ChatId,
-		"text":    messageData.Msg["Text"],
-		"date":    time.Now(),
-		"is_read": false,
-	}
-	_, err := db.SyncQ().Insert("chat_msg", newMsgData)
-	if err != nil {
-		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
-		return
-	}
-	newMsg, err := getNewMsg(db, newMsgData)
-	if err != nil {
-		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
-		return
-	}
-
-	// Send popup message
-	err = SendPopUpMessageNotification(r, &messageData, db)
-	if err != nil {
-		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
-		return
-	}
-
-	actionsAfterInsertNewMessage(r, msgJson, &messageData, &newMsg, db)
-}
-
-func handleWsImageNsg(r *http.Request, messageData Message, db *database.Database, msgJson *string) {
-	newMsgData := map[string]interface{}{
-		"user":    messageData.Uid,
-		"chat":    messageData.ChatId,
-		"text":    messageData.Msg["Text"],
-		"date":    time.Now(),
-		"is_read": false,
-	}
-	_, err := db.SyncQ().Insert("chat_msg", newMsgData)
-	if err != nil {
-		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
-		return
-	}
-	newMsg, err := getNewMsg(db, newMsgData)
-	if err != nil {
-		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
-		return
-	}
-	err = saveMessageImages(messageData.Msg["Images"], newMsg["Id"], db)
-	if err != nil {
-		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
-		return
-	}
-	newMsg["Images"] = messageData.Msg["Images"]
-
-	err = SendPopUpMessageNotification(r, &messageData, db)
-	if err != nil {
-		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
-		return
-	}
-
-	actionsAfterInsertNewMessage(r, msgJson, &messageData, &newMsg, db)
-}
-
+// actionsAfterInsertNewMessage function is used to start similar actions after sending a message.
 func actionsAfterInsertNewMessage(r *http.Request, msgJson *string, messageData *Message, newMsg *map[string]string, db *database.Database) {
 	// Increment msg count.
-	err := IncrementChatMsgCountFromDb(r, messageData.ChatId, messageData.Uid, db)
+	err := chat.IncrementChatMsgCountFromDb(r, messageData.ChatId, messageData.Uid, db)
 	if err != nil {
 		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
 		return
@@ -229,44 +162,9 @@ func actionsAfterInsertNewMessage(r *http.Request, msgJson *string, messageData 
 	}
 }
 
-// handleWsReadMsg processing a message read by a user.
-// Changes in the database of message status to "read".
-// Sending data about the message to the client.
-func handleWsReadMsg(r *http.Request, messageData Message, db *database.Database, msgJson *string) {
-	db.AsyncQ().AsyncUpdate("updMsg", "chat_msg", []dbutils.DbEquals{
-		{
-			Name:  "is_read",
-			Value: true,
-		},
-	}, dbutils.WHEquals(map[string]interface{}{"id": messageData.Msg["Id"]}, "AND"))
-	db.AsyncQ().AsyncQuery("decMsgCount", "UPDATE `chat_msg_count` SET `count`= `count` - 1 WHERE user = ? AND chat = ? ;",
-		messageData.Uid, messageData.ChatId)
-	db.AsyncQ().Wait()
-	updMsg, _ := db.AsyncQ().LoadAsyncRes("updMsg")
-	if updMsg.Error != nil {
-		*msgJson = wsError(messageData.Uid, messageData.ChatId, updMsg.Error.Error())
-		return
-	}
-	decMsgCount, _ := db.AsyncQ().LoadAsyncRes("decMsgCount")
-	if decMsgCount.Error != nil {
-		*msgJson = wsError(messageData.Uid, messageData.ChatId, decMsgCount.Error.Error())
-		return
-	}
-	err := globalDecrementMessages(r, messageData.Uid, messageData.ChatId, db)
-	if err != nil {
-		*msgJson = wsError(messageData.Uid, messageData.ChatId, decMsgCount.Error.Error())
-		return
-	}
-	*msgJson, err = newMsgJson(messageData.Type, messageData.Uid, messageData.ChatId, messageData.Msg)
-	if err != nil {
-		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())
-		return
-	}
-}
-
 // globalIncrementMessages If all conditions are met, sends a notification increase message to the notification socket.
 func globalIncrementMessages(r *http.Request, sendUserId string, chatId string, db *database.Database) error {
-	user, err := GetRecipientUser(chatId, sendUserId, db)
+	user, err := chat.GetRecipientUser(chatId, sendUserId, db)
 	if err != nil {
 		return err
 	}
@@ -277,21 +175,6 @@ func globalIncrementMessages(r *http.Request, sendUserId string, chatId string, 
 	}
 	if count != nil {
 		err := notification.SendGlobalIncrementMsg(r, user.Id)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func globalDecrementMessages(r *http.Request, readUID string, chatId string, db *database.Database) error {
-	count, err := db.SyncQ().QB().Select("count", "chat_msg_count").
-		Where("chat", "=", chatId, "AND", "user", "=", readUID, "AND count = 0").Ex()
-	if err != nil {
-		return err
-	}
-	if count != nil {
-		err := notification.SendGlobalDecrementMsg(r, readUID)
 		if err != nil {
 			return err
 		}
@@ -311,11 +194,35 @@ func getNewMsg(db *database.Database, msgData map[string]interface{}) (map[strin
 	if msg == nil {
 		return nil, errors.New("no new message found")
 	}
-	var cm ChatMessage
+	var cm chat.ChatMessage
 	err = dbutils.FillStructFromDb(msg[0], &cm)
 	if err != nil {
 		return nil, err
 	}
 	msgMap := map[string]string{"Id": cm.Id, "UserId": cm.UserId, "Text": cm.Text, "Date": cm.Date, "IsRead": cm.IsRead}
 	return msgMap, nil
+}
+
+// wsError sending the error to the client.
+func wsError(uid string, chatId string, error string) string {
+	msgJson, err := newMsgJson(WsError, uid, chatId, map[string]string{"Error": error})
+	if err != nil {
+		panic(err)
+	}
+	return msgJson
+}
+
+// newMsgJson sending a response to the client in json format.
+func newMsgJson(_type int, uid string, chatId string, msg map[string]string) (string, error) {
+	m := Message{
+		Type:   _type,
+		Uid:    uid,
+		ChatId: chatId,
+		Msg:    msg,
+	}
+	marshal, err := json.Marshal(m)
+	if err != nil {
+		return "", err
+	}
+	return string(marshal), nil
 }

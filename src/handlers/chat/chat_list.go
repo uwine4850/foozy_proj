@@ -30,7 +30,7 @@ func ChatList(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 		return func() { router.ServerError(w, err.Error()) }
 	}
 	//Database Connection.
-	db := conf.DatabaseI
+	db := conf.NewDb()
 	err = db.Connect()
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }

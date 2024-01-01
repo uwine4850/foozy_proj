@@ -154,6 +154,7 @@ func notificationError(err error) ([]byte, error) {
 	return notificationJson(WsError, []string{}, map[string]string{"error": err.Error()})
 }
 
+// GetRequestOnce gets the result of the "once" data from the header.
 func GetRequestOnce(r *http.Request) string {
 	once := r.Header.Get("once")
 	if once == "" {

@@ -15,7 +15,7 @@ func NotificationCountMddl(w http.ResponseWriter, r *http.Request, manager inter
 	if err != nil {
 		return
 	}
-	db := conf.DatabaseI
+	db := conf.NewDb()
 	err = db.Connect()
 	if err != nil {
 		panic(err)

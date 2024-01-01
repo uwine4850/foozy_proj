@@ -19,7 +19,7 @@ type UserData struct {
 
 func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
 	id, _ := manager.GetSlugParams("id")
-	db := conf.DatabaseI
+	db := conf.NewDb()
 	err := db.Connect()
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
@@ -51,54 +51,17 @@ func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IMan
 		return func() { router.ServerError(w, err.Error()) }
 	}
 	UID, _ := manager.GetUserContext("UID")
-	isSubscribe, err := userIsSubscribe(id, UID, db)
-	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
-	}
-	subCount, err := getCountSubscribers(id, db)
-	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
-	}
 	isChatExist, err := chatExist(id, UID, db)
 	if err != nil {
 		return func() { router.ServerError(w, err.Error()) }
 	}
 	manager.SetTemplatePath("src/templates/profile.html")
-	manager.SetContext(map[string]interface{}{"user": fillUserData, "isSubscribe": isSubscribe, "subCount": subCount, "isChatExist": isChatExist})
+	manager.SetContext(map[string]interface{}{"user": fillUserData, "isChatExist": isChatExist})
 	err = manager.RenderTemplate(w, r)
 	if err != nil {
 		panic(err)
 	}
 	return func() {}
-}
-
-func userIsSubscribe(subscribeUserId any, uid any, db *database.Database) (bool, error) {
-	res, err := db.SyncQ().Select([]string{"*"}, "subscribers", dbutils.WHEquals(map[string]interface{}{
-		"subscriber": uid,
-		"profile":    subscribeUserId,
-	}, "AND"), 1)
-	if err != nil {
-		return false, err
-	}
-	if res == nil {
-		return false, nil
-	} else {
-		return true, nil
-	}
-}
-
-func getCountSubscribers(profileId any, db *database.Database) (int, error) {
-	count, err := db.SyncQ().Count([]string{"*"}, "subscribers", dbutils.WHEquals(map[string]interface{}{
-		"profile": profileId,
-	}, "AND"), 0)
-	if err != nil {
-		return 0, err
-	}
-	parseInt, err := dbutils.ParseInt(count[0]["COUNT(*)"])
-	if err != nil {
-		return 0, err
-	}
-	return parseInt, nil
 }
 
 func chatExist(id any, uid any, db *database.Database) (int, error) {

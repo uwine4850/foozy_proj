@@ -1,7 +1,7 @@
-import {LazyLoad} from "./lazy_load";
+import {LazyLoad} from "../lazy_load";
 import {observeMessages} from "./observe_messages";
-import {IConnectData} from "./chat_ws";
-import {handleError} from "./chat/chat";
+import {IConnectData} from "./chatws/chat_ws";
+import {handleError} from "./chat";
 
 export function runLazyLoadMsg(connectData: IConnectData){
     let l = new LazyLoad("last-msg", ["first", "msgtype", "uid", "chatid", "msgid"], "/load-messages")

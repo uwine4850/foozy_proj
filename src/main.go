@@ -8,6 +8,7 @@ import (
 	server2 "github.com/uwine4850/foozy/pkg/server"
 	"github.com/uwine4850/foozy/pkg/tmlengine"
 	"github.com/uwine4850/foozy_proj/src/handlers/chat"
+	"github.com/uwine4850/foozy_proj/src/handlers/chat/chatws"
 	"github.com/uwine4850/foozy_proj/src/handlers/notification"
 	"github.com/uwine4850/foozy_proj/src/handlers/profile"
 	"github.com/uwine4850/foozy_proj/src/middlewares/chatmddl"
@@ -52,9 +53,9 @@ func main() {
 	newRouter.Post("/log-out-post", profile.ProfileLogOutPost)
 	newRouter.Get("/chat/<id>", chat.Chat)
 	newRouter.Get("/chat-list", chat.ChatList)
-	newRouter.Post("/receive-msg", chat.ReceiveMessage)
+	newRouter.Post("/receive-msg", chatws.ReceiveMessage)
 	newRouter.Post("/create-chat", chat.CreateChatPost)
-	newRouter.Ws("/chat-ws", router.NewWebsocket(router.Upgrader), chat.WsHandler)
+	newRouter.Ws("/chat-ws", router.NewWebsocket(router.Upgrader), chatws.WsHandler)
 	newRouter.Get("/load-messages", chat.LoadMessages)
 	newRouter.Ws("/notification-ws", router.NewWebsocket(router.Upgrader), notification.WsHandler)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))

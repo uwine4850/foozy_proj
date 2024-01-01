@@ -1,5 +1,5 @@
-import {Observer} from "./observer";
-import {IConnectData, IMessage, MessageType} from "./chat_ws";
+import {Observer} from "../observer";
+import {IConnectData, IMessage, MessageType} from "./chatws/chat_ws";
 
 export function observeMessages(connectData: IConnectData){
     let ob = new Observer("chat-msg-not-read-obs", {root: null, threshold: 0.7});

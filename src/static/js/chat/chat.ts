@@ -1,5 +1,5 @@
 import {Ajax} from "../ajax";
-import {IConnectData} from "../chat_ws";
+import {IConnectData} from "./chatws/chat_ws";
 
 export function SendAjaxChatMessage(wsMessageConnectData: IConnectData){
     let aj = new Ajax("/receive-msg", "chat-form");
@@ -18,16 +18,8 @@ export function SendAjaxChatMessage(wsMessageConnectData: IConnectData){
     aj.listen();
 }
 
-function removeSelectedFile(fileName: string) {
-    const fileInput = document.getElementById('images') as HTMLInputElement;
-    const newFiles = Array.from(fileInput.files!)
-        .filter(file => file.name != fileName) as unknown as File[];
-
-    const dataTransfer = new DataTransfer();
-    newFiles.forEach(file => dataTransfer.items.add(file));
-    fileInput.files = dataTransfer.files;
-}
-
+// OnImagesSelect The function is executed while selecting files from input.
+// The selected images are displayed above the message input field. By clicking on an image, you can remove it from sending.
 export function OnImagesSelect(){
     document.getElementById("images-btn")!.onclick = function (){
         document.getElementById('images')!.click();
@@ -57,6 +49,16 @@ export function OnImagesSelect(){
             });
         });
     });
+}
+
+function removeSelectedFile(fileName: string) {
+    const fileInput = document.getElementById('images') as HTMLInputElement;
+    const newFiles = Array.from(fileInput.files!)
+        .filter(file => file.name != fileName) as unknown as File[];
+
+    const dataTransfer = new DataTransfer();
+    newFiles.forEach(file => dataTransfer.items.add(file));
+    fileInput.files = dataTransfer.files;
 }
 
 export function handleError(text: string){

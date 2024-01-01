@@ -1,4 +1,4 @@
-package chat
+package chatws
 
 import (
 	"github.com/uwine4850/foozy/pkg/interfaces"

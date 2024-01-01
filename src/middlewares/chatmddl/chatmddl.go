@@ -28,7 +28,7 @@ func ChatPermissionMddl(w http.ResponseWriter, r *http.Request, manager interfac
 		return
 	}
 	chatId, _ := manager.GetSlugParams("id")
-	db := conf.DatabaseI
+	db := conf.NewDb()
 	err = db.Connect()
 	if err != nil {
 		middlewares.SetMddlError(err, manager)

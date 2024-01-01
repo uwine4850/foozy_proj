@@ -21,7 +21,7 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		return func() { sendJson(map[string]string{"err": err.Error()}, w) }
 	}
 
-	db := conf.DatabaseI
+	db := conf.NewDb()
 	err = db.Connect()
 	if err != nil {
 		return func() { sendJson(map[string]string{"err": err.Error()}, w) }
@@ -78,7 +78,7 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		}
 		images, err := loadMessageImages(m.Id, db)
 		if err != nil {
-			return func() { sendJson(map[string]string{"err": "Permission dined"}, w) }
+			return func() { sendJson(map[string]string{"err": err.Error()}, w) }
 		}
 		m.Images = images
 		chatMessages = append(chatMessages, m)

@@ -1,8 +1,8 @@
 import '../scss/style.scss';
 import {runIfExist} from "./utils";
 import {Ajax} from "./ajax";
-import {RunWs} from "./chat_ws";
-import {runLazyLoadMsg, runLazyLoadNotReadMsg} from "./lazy_load_msg";
+import {RunWs} from "./chat/chatws/chat_ws";
+import {runLazyLoadMsg, runLazyLoadNotReadMsg} from "./chat/lazy_load_msg";
 import {RunWsNotification} from "./notification_ws";
 import {OnImagesSelect, SendAjaxChatMessage} from "./chat/chat";
 import {PopUp} from "./pop_up";

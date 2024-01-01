@@ -48,7 +48,7 @@ func RegisterPost(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 	if registerForm.Password[0] != registerForm.ConfirmPass[0] {
 		return func() { router.RedirectError(w, r, "/register", "The passwords don't match.", manager) }
 	}
-	db := conf.DatabaseI
+	db := conf.NewDb()
 	err = db.Connect()
 	if err != nil {
 		return func() { router.RedirectError(w, r, "/register", err.Error(), manager) }

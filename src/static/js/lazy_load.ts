@@ -1,10 +1,10 @@
 import {ajaxGET} from "./ajax";
 
 export class LazyLoad{
-    private obsElementId: string;
-    private dataFields: string[];
+    private readonly obsElementId: string;
+    private readonly dataFields: string[];
     private options: IntersectionObserverInit;
-    private url: string;
+    private readonly url: string;
     private valuesData: Record<string, string> = {};
     constructor(elementId: string, dataFields: string[], url: string) {
         this.obsElementId = elementId;
@@ -17,7 +17,6 @@ export class LazyLoad{
     }
 
     private getValues(obsElement: Element){
-        // let data: Record<string, string> = {};
         for (const dataField of this.dataFields) {
             let f: string | null = obsElement.getAttribute("data-" + dataField);
             if (f != null){
@@ -32,7 +31,6 @@ export class LazyLoad{
     }
 
     public run(onTrigger: (response) => void, onError: (error: string) => void){
-        // let obsElement = document.getElementById(this.obsElementId);
         let obsElement = document.getElementsByClassName(this.obsElementId);
         const observer = new IntersectionObserver((entries: IntersectionObserverEntry[], observer: IntersectionObserver) => {
             entries.forEach(entry => {
