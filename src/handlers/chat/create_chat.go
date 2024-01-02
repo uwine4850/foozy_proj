@@ -37,6 +37,12 @@ func CreateChatPost(w http.ResponseWriter, r *http.Request, manager interfaces.I
 		return func() { http.Redirect(w, r, "/chat/"+chatF.Id[0], http.StatusFound) }
 	}
 
+	if chatF.MsgText[0] == "" {
+		return func() {
+			http.Redirect(w, r, "/prof/"+chatF.UserId[0], http.StatusFound)
+		}
+	}
+
 	// Create chat
 	uid, err := r.Cookie("UID")
 	if err != nil {

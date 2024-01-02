@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS `foozy_proj`.`chat_msg` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `user` INT NOT NULL,
     `chat` INT NOT NULL,
-    `text` TEXT NOT NULL,
+    `text` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
     `date` DATETIME NOT NULL,
     `is_read` BOOLEAN NOT NULL,
     PRIMARY KEY (`id`),

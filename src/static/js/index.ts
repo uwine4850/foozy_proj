@@ -34,3 +34,13 @@ if (regex.test(window.location.pathname)){
     runLazyLoadMsg(connectData);
     runLazyLoadNotReadMsg(connectData);
 }
+
+const regexProf = /^\/prof\/\d+$/;
+if (regexProf.test(window.location.pathname)){
+    let popUpNotification = new PopUp("pop-up-panel-new-chat", true);
+    popUpNotification.onClick(function (popUp, popUpActivate){
+        popUpActivate.classList.toggle("hide-pop-up-activate-new-chat");
+        popUp.classList.toggle("pop-up-hide");
+    });
+    popUpNotification.start();
+}

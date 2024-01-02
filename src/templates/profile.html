@@ -1,14 +1,22 @@
 {% extends "t2/base.html" %}
 
 {% block cont %}
-<form action="/create-chat" method="post" enctype="application/x-www-form-urlencoded" id="new-msg-form" class="new-msg-form new-msg-form-hidden">
-    <textarea name="msg"></textarea>
-    <input type="hidden" name="chatId" value="{{ isChatExist }}">
-    <input type="hidden" name="userId" value="{{ user.Id }}">
-    <button>
-        <a>Send</a>
-    </button>
-</form>
+<div id="pop-up-panel-bg-new-chat" class="pop-up-panel-bg">
+    <div class="pop-up-panel pop-up-panel-new-chat">
+        <button id="pop-up-activate-new-chat" class="pop-up-activate pop-up-activate-new-chat hide-pop-up-activate-new-chat"><img src="/static/img/close.svg"></button>
+        <div class="pop-up-content pop-up-content-new-chat pop-up-hide">
+            <form action="/create-chat" method="post" enctype="application/x-www-form-urlencoded">
+                <textarea name="msg"></textarea>
+                <input type="hidden" name="chatId" value="{{ isChatExist }}">
+                <input type="hidden" name="userId" value="{{ user.Id }}">
+                <button type="submit">
+                    <a>Send</a>
+                </button>
+            </form>
+        </div>
+    </div>
+    <div class="pop-up-bg pop-up-bg-hide"></div>
+</div>
 <div class="profile-wrap">
     <div class="profile-left-side">
         {% if user.Avatar %}
@@ -58,7 +66,9 @@
         if (id !== "-1"){
             window.location.href = "http://localhost:8000/chat/" + id
         } else {
-            document.getElementById("new-msg-form").classList.toggle("new-msg-form-hidden");
+            document.getElementById("pop-up-activate-new-chat").click();
+            // document.getElementById("pop-up-panel-bg-new-chat").classList.toggle("hide-pop-up-panel-bg-new-chat");
+            // document.getElementById("new-msg-form").classList.toggle("new-msg-form-hidden");
         }
     }
 </script>
