@@ -25,9 +25,10 @@ export class Ajax{
         this.path = path;
         this.formId = formId;
         this.formValues = [];
+        this.urlFormValue = [];
     }
 
-    onSuccess(fn: (error: object)=> void){
+    onSuccess(fn: (response: object)=> void){
         this.onSuccessFn = fn;
     }
 

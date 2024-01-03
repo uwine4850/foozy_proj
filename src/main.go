@@ -7,6 +7,7 @@ import (
 	"github.com/uwine4850/foozy/pkg/router"
 	server2 "github.com/uwine4850/foozy/pkg/server"
 	"github.com/uwine4850/foozy/pkg/tmlengine"
+	"github.com/uwine4850/foozy_proj/src/handlers"
 	"github.com/uwine4850/foozy_proj/src/handlers/chat"
 	"github.com/uwine4850/foozy_proj/src/handlers/chat/chatws"
 	"github.com/uwine4850/foozy_proj/src/handlers/notification"
@@ -58,6 +59,8 @@ func main() {
 	newRouter.Ws("/chat-ws", router.NewWebsocket(router.Upgrader), chatws.WsHandler)
 	newRouter.Get("/load-messages", chat.LoadMessages)
 	newRouter.Ws("/notification-ws", router.NewWebsocket(router.Upgrader), notification.WsHandler)
+	newRouter.Get("/search", handlers.SearchHandler)
+	newRouter.Post("/search-post", handlers.SearchHandlerPost)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
 	newRouter.GetMux().Handle("/media/", http.StripPrefix("/media/", http.FileServer(http.Dir("media"))))
 	server := server2.NewServer(":8000", newRouter)

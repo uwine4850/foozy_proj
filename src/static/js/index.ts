@@ -1,11 +1,11 @@
 import '../scss/style.scss';
 import {runIfExist} from "./utils";
-import {Ajax} from "./ajax";
 import {RunWs} from "./chat/chatws/chat_ws";
 import {runLazyLoadMsg, runLazyLoadNotReadMsg} from "./chat/lazy_load_msg";
 import {RunWsNotification} from "./notification_ws";
 import {OnImagesSelect, SendAjaxChatMessage} from "./chat/chat";
 import {PopUp} from "./pop_up";
+import {searchAjax} from "./search";
 
 runIfExist(document.getElementById("pp-del-avatar-label"), function (el){
    el.onclick = function (){
@@ -44,3 +44,5 @@ if (regexProf.test(window.location.pathname)){
     });
     popUpNotification.start();
 }
+
+searchAjax();

@@ -1,0 +1,17 @@
+{% extends "t2/base.html" %}
+
+{% block cont %}
+<div class="search-box">
+    <div id="search-error" class="error search-error search-error-hidden">ffrff</div>
+    <form action="/search-post" id="search-input" class="search-input" method="post" enctype="application/x-www-form-urlencoded">
+        <input type="text" name="search">
+        <button type="submit">
+            <a>
+                <img src="/static/img/2/search.svg">
+            </a>
+        </button>
+    </form>
+    <div id="search-items" class="search-items">
+    </div>
+</div>
+{% endblock cont %}
