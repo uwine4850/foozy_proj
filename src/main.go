@@ -61,6 +61,7 @@ func main() {
 	newRouter.Ws("/notification-ws", router.NewWebsocket(router.Upgrader), notification.WsHandler)
 	newRouter.Get("/search", handlers.SearchHandler)
 	newRouter.Post("/search-post", handlers.SearchHandlerPost)
+	newRouter.Post("/message-menu", chatws.MessageMenu)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
 	newRouter.GetMux().Handle("/media/", http.StripPrefix("/media/", http.FileServer(http.Dir("media"))))
 	server := server2.NewServer(":8000", newRouter)

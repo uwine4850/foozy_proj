@@ -57,3 +57,15 @@ func SendPopUpMessageNotification(r *http.Request, messageData *Message, db *dat
 	}
 	return nil
 }
+
+func SendDeleteMessage(r *http.Request, uid string, chatId string, msgId string) error {
+	msgJson, err := newMsgJson(WsDeleteMessage, uid, chatId, map[string]string{"msgId": msgId})
+	if err != nil {
+		return err
+	}
+	err = utils.WsSendMessage(r, msgJson, "ws://localhost:8000/chat-ws", true)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -2,13 +2,15 @@ import {handleError, SendAjaxChatMessage} from "../chat";
 import {HandleWsTextMsg} from "./ws_text_message";
 import {HandleWsReadMsg} from "./ws_read_message";
 import {HandleWsImageMsg} from "./ws_image_message";
+import {HandleWsDeleteMessage} from "./ws_delete_message";
 
 export enum MessageType{
     WsConnect,
     WsTextMsg,
     WsReadMsg,
     WsError,
-    WsImageNsg
+    WsImageNsg,
+    WsDeleteMessage,
 }
 
 export interface IMessage {
@@ -33,6 +35,7 @@ const MessageActions: MsgActions = {
     [MessageType.WsReadMsg]: handleWsReadMsg,
     [MessageType.WsError]: handleWsError,
     [MessageType.WsImageNsg]: handleWsImageMsg,
+    [MessageType.WsDeleteMessage]: handleWsDeleteMessage,
 }
 
 let connectData: IConnectData = {
@@ -61,6 +64,10 @@ function handleWsError(message: IMessage, ws: WebSocket){
 
 function handleWsImageMsg(message: IMessage, ws: WebSocket){
     HandleWsImageMsg(message, ws, connectData);
+}
+
+function handleWsDeleteMessage(message: IMessage, ws: WebSocket){
+    HandleWsDeleteMessage(message, ws, connectData);
 }
 
 export function RunWs(): IConnectData{

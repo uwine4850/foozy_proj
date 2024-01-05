@@ -96,9 +96,13 @@ export class Ajax{
                     'Content-Type': enctype,
                 },
             });
-            this.onSuccessFn(response.data);
+            if (this.onSuccessFn){
+                this.onSuccessFn(response.data);
+            }
         } catch (error) {
-            this.onErrorFn(error.data);
+            if (this.onErrorFn){
+                this.onErrorFn(error.data);
+            }
         }
     }
 }

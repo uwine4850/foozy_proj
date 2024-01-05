@@ -22,6 +22,7 @@ const (
 	WsReadMsg
 	WsError
 	WsImageNsg
+	WsDeleteMessage
 )
 
 type Message struct {
@@ -34,9 +35,10 @@ type Message struct {
 type ActionFunc func(r *http.Request, messageData Message, db *database.Database, msgJson *string)
 
 var actionsMap = map[int]ActionFunc{
-	WsTextMsg:  handleWsTextMsg,
-	WsReadMsg:  handleWsReadMsg,
-	WsImageNsg: handleWsImageNsg,
+	WsTextMsg:       handleWsTextMsg,
+	WsReadMsg:       handleWsReadMsg,
+	WsImageNsg:      handleWsImageNsg,
+	WsDeleteMessage: handleWsDeleteMessage,
 }
 
 var chatConnections = make(map[string][]*websocket.Conn)

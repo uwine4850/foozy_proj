@@ -2,7 +2,19 @@
 
 {% block cont %}
 <div class="pop-up-panel-bg">
-    <div class="pop-up-panel chat-pop-up">
+    <div class="p2 pop-up-panel chat-pop-up">
+        <button id="delete-pop-up-activate" class="pop-up-activate">Activate</button>
+        <form id="delete-pop-up-content" class="pop-up-content chat-pop-up-content pop-up-hide del-msg-content" enctype="application/x-www-form-urlencoded">
+            <input id="del-msg-id" type="hidden" name="msg-id">
+            <input type="hidden" name="chatId" value="{{ chatId }}">
+            <span>Delete message?</span>
+            <button id="submit-delete-message" type="submit"><a href=""><span>Delete</span></a></button>
+        </form>
+    </div>
+    <div class="pop-up-bg pop-up-bg-hide"></div>
+</div>
+<div class="pop-up-panel-bg">
+    <div class="p1 pop-up-panel chat-pop-up">
         <button id="chat-pop-up-activate" class="pop-up-activate">Activate</button>
         <div id="chat-pop-up-content" class="pop-up-content chat-pop-up-content pop-up-hide">
         </div>
@@ -26,6 +38,11 @@
         {% for msg in messages %}
             {% if msg.UserId != user.Id %}
                 <div data-first="1" data-msgtype="read" data-chatid="{{ chatId }}" data-msgid="{{ msg.Id }}" id="last-msg" class="chat-content-msg chat-content-msg-my-msg last-msg">
+                    <div class="message-menu message-menu-hide">
+                        <button class="message-menu-delete" type="button"><a href="#">
+                            <img src="/static/img/del.svg">
+                        </a></button>
+                    </div>
                     {% if msg.IsRead == "0" %}
                     <div class="chat-msg-not-read-my"></div>
                     {% endif %}
@@ -47,7 +64,12 @@
                 {% else %}
                     <div data-first="1" data-msgtype="notread" data-uid="{{ uid }}" data-chatId="{{ chatId }}" data-msgId="{{ msg.Id }}" id="last-msg" class="chat-content-msg chat-msg-not-read chat-msg-not-read-obs chat-msg-not-read-obs-down last-msg">
                 {% endif %}
-                    <div class="chat-content-msg-images">
+                        <div class="message-menu message-menu-hide">
+                            <button class="message-menu-delete" type="button"><a href="#">
+                                <img src="/static/img/del.svg">
+                            </a></button>
+                        </div>
+                        <div class="chat-content-msg-images">
                         {% for image in msg.Images %}
                         <span>
                             <img src="/{{ image.Path }}">
@@ -60,7 +82,7 @@
                     <div class="chat-content-msg-date">{{ msg.Date }}</div>
                 </div>
             {% endif %}
-            {% endfor %}
+        {% endfor %}
     </div>
         <div id="chat-form-images" class="chat-form-images">
         </div>
@@ -76,5 +98,6 @@
             </button>
         </div>
     </form>
+    </div>
 </div>
 {% endblock cont %}

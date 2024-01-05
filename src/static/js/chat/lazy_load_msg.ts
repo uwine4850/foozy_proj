@@ -2,6 +2,7 @@ import {LazyLoad} from "../lazy_load";
 import {observeMessages} from "./observe_messages";
 import {IConnectData} from "./chatws/chat_ws";
 import {handleError} from "./chat";
+import {messageMenu} from "./message_menu";
 
 export function runLazyLoadMsg(connectData: IConnectData){
     let l = new LazyLoad("last-msg", ["first", "msgtype", "uid", "chatid", "msgid"], "/load-messages")
@@ -46,8 +47,10 @@ export function runLazyLoadMsg(connectData: IConnectData){
                 document.getElementById("chat-content").insertAdjacentHTML('afterbegin', getMsgText(msg[i], msgData));
             }
             observeMessages(connectData)
+            messageMenu();
         } else {
             observeMessages(connectData)
+            messageMenu();
         }
         const scrollHeightAfter = parentElement.scrollHeight;
         parentElement.scrollTop = scrollTopBefore + (scrollHeightAfter - scrollHeightBefore);
@@ -97,9 +100,11 @@ export function runLazyLoadNotReadMsg(connectData: IConnectData) {
                 }
                 document.getElementById("chat-content").insertAdjacentHTML('beforeend', getMsgText(msg[i], msgData));
             }
-            observeMessages(connectData)
+            observeMessages(connectData);
+            messageMenu();
         } else {
-            observeMessages(connectData)
+            observeMessages(connectData);
+            messageMenu();
         }
         parentElement.scrollTop = scrollTopBefore;
     }, function (error){
@@ -124,6 +129,11 @@ function getMsgText(msg, msgData: MsgDynamicData){
     }
     return `
         <div ${msgData.lastMsgData} class="chat-content-msg ${msgData.classes}">
+            <div class="message-menu message-menu-hide">
+                <button class="message-menu-delete" type="button"><a href="#">
+                    <img src="/static/img/del.svg">
+                </a></button>
+            </div>
             ${msgData.isReadMy}
             <div class="chat-content-msg-images">
                 ${chatImages}

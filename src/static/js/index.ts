@@ -6,6 +6,7 @@ import {RunWsNotification} from "./notification_ws";
 import {OnImagesSelect, SendAjaxChatMessage} from "./chat/chat";
 import {PopUp} from "./pop_up";
 import {searchAjax} from "./search";
+import {messageAjaxListen, messageMenu} from "./chat/message_menu";
 
 runIfExist(document.getElementById("pp-del-avatar-label"), function (el){
    el.onclick = function (){
@@ -23,11 +24,19 @@ popUpNotification.start();
 RunWsNotification();
 const regex = /^\/chat\/\d+$/;
 if (regex.test(window.location.pathname)){
-    let popUp = new PopUp("chat-pop-up", true);
+    messageMenu();
+    messageAjaxListen();
+    let popUp = new PopUp("p1", true);
     popUp.onClick(function (popUp){
         popUp.classList.toggle("pop-up-hide");
     });
     popUp.start();
+
+    let popUpDelete = new PopUp("p2", true);
+    popUpDelete.onClick(function (popUp){
+        popUp.classList.toggle("pop-up-hide");
+    });
+    popUpDelete.start();
 
     let connectData = RunWs();
     OnImagesSelect();
