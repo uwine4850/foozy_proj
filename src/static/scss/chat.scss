@@ -223,6 +223,7 @@
   }
 }
 
+// DELETE POPUP
 .chat-pop-up.chat-pop-up{
   position: absolute;
   left: calc(50% - 250px);
@@ -253,5 +254,77 @@
     margin-left: auto;
     background-color: $lightGray;
     font-size: 1rem;
+  }
+}
+
+// UPDATE POPUP
+.chat-upd-images{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 150px));
+  grid-gap: 10px;
+  .chat-upd-image{
+    position: relative;
+    height: 150px;
+    overflow: hidden;
+    border-radius: 5px;
+    &:hover .chat-upd-image-remove{
+      display: block;
+    }
+    img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .chat-upd-image-remove{
+      @include defaultButton();
+      display: none;
+      width: 100px;
+      height: 36px;
+      position: absolute;
+      top: calc(50% - 18px);
+      left: calc(50% - 50px);
+      background-color: #ca3131;
+      border-radius: 3px;
+      a{
+        span{
+          margin: auto;
+          font-size: 1rem;
+        }
+      }
+    }
+    .chat-upd-image-remove-checked{
+      background-color: $lightGray;
+    }
+  }
+}
+
+.upd-images-checkboxes{
+  display: none;
+}
+
+.upd-message-text{
+  background-color: $lightGray;
+  width: 100%;
+  height: 100px;
+  resize: none;
+  border: none;
+  outline: none;
+  border-radius: 5px;
+  box-sizing: border-box;
+  padding: 10px;
+  font-size: 1rem;
+  margin-top: 10px;
+}
+
+#submit-update-message{
+  @include defaultButton();
+  width: 100px;
+  margin-left: auto;
+  border-radius: 3px;
+  background-color: $lightGray;
+  a{
+    span{
+      margin: auto;
+    }
   }
 }

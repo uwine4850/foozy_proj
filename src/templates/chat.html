@@ -2,6 +2,22 @@
 
 {% block cont %}
 <div class="pop-up-panel-bg">
+    <div class="p3 pop-up-panel chat-pop-up">
+        <button id="update-pop-up-activate" class="pop-up-activate">Activate</button>
+        <form id="update-pop-up-content" class="pop-up-content chat-pop-up-content pop-up-hide" enctype="application/x-www-form-urlencoded">
+            <div id="chat-upd-images" class="chat-upd-images">
+            </div>
+            <div id="upd-images-checkboxes" class="upd-images-checkboxes">
+            </div>
+            <input type="hidden" name="chatId" value="{{ chatId }}">
+            <input id="updMsgId" name="updMsgId" type="hidden">
+            <textarea id="upd-message-text" class="upd-message-text" name="messageText"></textarea>
+            <button id="submit-update-message" type="submit"><a><span>Update</span></a></button>
+        </form>
+    </div>
+    <div class="pop-up-bg pop-up-bg-hide"></div>
+</div>
+<div class="pop-up-panel-bg">
     <div class="p2 pop-up-panel chat-pop-up">
         <button id="delete-pop-up-activate" class="pop-up-activate">Activate</button>
         <form id="delete-pop-up-content" class="pop-up-content chat-pop-up-content pop-up-hide del-msg-content" enctype="application/x-www-form-urlencoded">
@@ -42,6 +58,9 @@
                         <button class="message-menu-delete" type="button"><a href="#">
                             <img src="/static/img/del.svg">
                         </a></button>
+                        <button class="message-menu-update" type="button"><a href="#">
+                            <img src="/static/img/edit.svg">
+                        </a></button>
                     </div>
                     {% if msg.IsRead == "0" %}
                     <div class="chat-msg-not-read-my"></div>
@@ -67,6 +86,9 @@
                         <div class="message-menu message-menu-hide">
                             <button class="message-menu-delete" type="button"><a href="#">
                                 <img src="/static/img/del.svg">
+                            </a></button>
+                            <button class="message-menu-update" type="button"><a href="#">
+                                <img src="/static/img/edit.svg">
                             </a></button>
                         </div>
                         <div class="chat-content-msg-images">

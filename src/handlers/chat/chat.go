@@ -67,7 +67,7 @@ func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) f
 			return func() { router.ServerError(w, err.Error()) }
 		}
 		// Load images.
-		images, err := loadMessageImages(cm.Id, db)
+		images, err := LoadMessageImages(cm.Id, db)
 		if err != nil {
 			return func() { router.ServerError(w, err.Error()) }
 		}
@@ -160,7 +160,8 @@ func loadChatMsg(chatId int, userData profile.UserData, db *database.Database) (
 	}
 }
 
-func loadMessageImages(parentMessageId string, db *database.Database) ([]MessageImage, error) {
+// LoadMessageImages Loads all images that belong to the selected message.
+func LoadMessageImages(parentMessageId string, db *database.Database) ([]MessageImage, error) {
 	images, err := db.SyncQ().QB().Select("*", "chat_msg_images").
 		Where("parent_msg", "=", parentMessageId).Ex()
 	if err != nil {

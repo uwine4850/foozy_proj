@@ -76,7 +76,7 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		if err != nil {
 			return func() { sendJson(map[string]string{"err": err.Error()}, w) }
 		}
-		images, err := loadMessageImages(m.Id, db)
+		images, err := LoadMessageImages(m.Id, db)
 		if err != nil {
 			return func() { sendJson(map[string]string{"err": err.Error()}, w) }
 		}

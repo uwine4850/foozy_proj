@@ -23,6 +23,7 @@ const (
 	WsError
 	WsImageNsg
 	WsDeleteMessage
+	WsUpdateMessage
 )
 
 type Message struct {
@@ -39,6 +40,7 @@ var actionsMap = map[int]ActionFunc{
 	WsReadMsg:       handleWsReadMsg,
 	WsImageNsg:      handleWsImageNsg,
 	WsDeleteMessage: handleWsDeleteMessage,
+	WsUpdateMessage: handleWsUpdateMessage,
 }
 
 var chatConnections = make(map[string][]*websocket.Conn)

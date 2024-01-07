@@ -69,3 +69,15 @@ func SendDeleteMessage(r *http.Request, uid string, chatId string, msgId string)
 	}
 	return nil
 }
+
+func SendUpdateMessage(r *http.Request, uid string, chatId string, msgData map[string]string) error {
+	msgJson, err := newMsgJson(WsUpdateMessage, uid, chatId, msgData)
+	if err != nil {
+		return err
+	}
+	err = utils.WsSendMessage(r, msgJson, "ws://localhost:8000/chat-ws", true)
+	if err != nil {
+		return err
+	}
+	return nil
+}

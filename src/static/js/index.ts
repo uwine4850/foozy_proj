@@ -25,7 +25,6 @@ RunWsNotification();
 const regex = /^\/chat\/\d+$/;
 if (regex.test(window.location.pathname)){
     messageMenu();
-    messageAjaxListen();
     let popUp = new PopUp("p1", true);
     popUp.onClick(function (popUp){
         popUp.classList.toggle("pop-up-hide");
@@ -37,6 +36,14 @@ if (regex.test(window.location.pathname)){
         popUp.classList.toggle("pop-up-hide");
     });
     popUpDelete.start();
+
+    let popUpUpdate = new PopUp("p3", true);
+    popUpUpdate.onClick(function (popUp){
+        popUp.classList.toggle("pop-up-hide");
+    });
+    popUpUpdate.start();
+
+    messageAjaxListen();
 
     let connectData = RunWs();
     OnImagesSelect();

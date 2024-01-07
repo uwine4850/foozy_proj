@@ -133,6 +133,9 @@ function getMsgText(msg, msgData: MsgDynamicData){
                 <button class="message-menu-delete" type="button"><a href="#">
                     <img src="/static/img/del.svg">
                 </a></button>
+                <button class="message-menu-update" type="button"><a href="#">
+                    <img src="/static/img/edit.svg">
+                </a></button>
             </div>
             ${msgData.isReadMy}
             <div class="chat-content-msg-images">

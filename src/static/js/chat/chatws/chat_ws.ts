@@ -3,6 +3,7 @@ import {HandleWsTextMsg} from "./ws_text_message";
 import {HandleWsReadMsg} from "./ws_read_message";
 import {HandleWsImageMsg} from "./ws_image_message";
 import {HandleWsDeleteMessage} from "./ws_delete_message";
+import {HandleWsUpdateMsg} from "./ws_update_message";
 
 export enum MessageType{
     WsConnect,
@@ -11,6 +12,7 @@ export enum MessageType{
     WsError,
     WsImageNsg,
     WsDeleteMessage,
+    WsUpdateMessage,
 }
 
 export interface IMessage {
@@ -36,6 +38,7 @@ const MessageActions: MsgActions = {
     [MessageType.WsError]: handleWsError,
     [MessageType.WsImageNsg]: handleWsImageMsg,
     [MessageType.WsDeleteMessage]: handleWsDeleteMessage,
+    [MessageType.WsUpdateMessage]: handleWsUpdateMessage,
 }
 
 let connectData: IConnectData = {
@@ -68,6 +71,10 @@ function handleWsImageMsg(message: IMessage, ws: WebSocket){
 
 function handleWsDeleteMessage(message: IMessage, ws: WebSocket){
     HandleWsDeleteMessage(message, ws, connectData);
+}
+
+function handleWsUpdateMessage(message: IMessage, ws: WebSocket){
+    HandleWsUpdateMsg(message, ws, connectData);
 }
 
 export function RunWs(): IConnectData{
