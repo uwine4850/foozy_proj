@@ -16,7 +16,7 @@ export function HandleWsImageMsg(message: IMessage, ws: WebSocket, connectData: 
     let chatImages = ""
     for (const image of message.Msg.Images.split("\\")) {
         chatImages += `<span>
-                           <img src="/${image}">
+                           <img loading="lazy" src="/${image}">
                        </span>`
     }
     chat_content.innerHTML += `

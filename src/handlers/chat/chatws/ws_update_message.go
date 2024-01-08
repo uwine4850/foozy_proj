@@ -45,6 +45,7 @@ func handleWsUpdateMessage(r *http.Request, messageData Message, db *database.Da
 		return
 	}
 
+	// Retrieving an updated message. If it does not have images and text, delete this message.
 	chatMessage, err := db.SyncQ().QB().Select("*", "chat_msg").Where("id", "=", messageData.Msg["id"]).Ex()
 	if err != nil {
 		*msgJson = wsError(messageData.Uid, messageData.ChatId, updText.Error.Error())
@@ -72,6 +73,7 @@ func handleWsUpdateMessage(r *http.Request, messageData Message, db *database.Da
 		return
 	}
 
+	// If the message is not deleted, a signal is sent that it has been updated.
 	*msgJson, err = newMsgJson(WsUpdateMessage, messageData.Uid, messageData.ChatId, messageData.Msg)
 	if err != nil {
 		*msgJson = wsError(messageData.Uid, messageData.ChatId, err.Error())

@@ -123,7 +123,7 @@ function getMsgText(msg, msgData: MsgDynamicData){
     if (msg.Images != null){
         for (const image of msg.Images) {
             chatImages += `<span>
-                           <img src="/${image.Path}">
+                           <img loading="lazy" src="/${image.Path}">
                        </span>`;
         }
     }

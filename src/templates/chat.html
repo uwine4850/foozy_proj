@@ -1,4 +1,4 @@
-{% extends "t2/base.html" %}
+{% extends "base.html" %}
 
 {% block cont %}
 <div class="pop-up-panel-bg">
@@ -68,7 +68,7 @@
                     <div class="chat-content-msg-images">
                         {% for image in msg.Images %}
                         <span>
-                            <img src="/{{ image.Path }}">
+                            <img loading="lazy" src="/{{ image.Path }}">
                         </span>
                         {% endfor %}
                     </div>
@@ -94,7 +94,7 @@
                         <div class="chat-content-msg-images">
                         {% for image in msg.Images %}
                         <span>
-                            <img src="/{{ image.Path }}">
+                            <img loading="lazy" src="/{{ image.Path }}">
                         </span>
                         {% endfor %}
                     </div>

@@ -40,6 +40,7 @@ function handleMouseUp() {
     clearTimeout(timeoutId);
 }
 
+// Trigger events when menu buttons are pressed.
 function messageMenuActions(){
     let deleteButtons = document.getElementsByClassName("message-menu-delete") as HTMLCollectionOf<HTMLElement>;
     let deletePopup = document.getElementById("delete-pop-up-activate");
@@ -57,7 +58,9 @@ function messageMenuActions(){
     }
 }
 
+// Starts listening for the message menu form to be sent.
 export function messageAjaxListen(){
+    // Sending a form delete message.
     let ajaxDelete = new Ajax("/message-menu", "delete-pop-up-content");
     ajaxDelete.setUrlFormValue("action", "delete")
     ajaxDelete.onSuccess(function (response){
@@ -71,6 +74,7 @@ export function messageAjaxListen(){
         document.getElementById("delete-pop-up-activate").click();
     }
 
+    // Sending a message update form.
     let ajaxUpdate = new Ajax("/message-menu", "update-pop-up-content");
     ajaxUpdate.setUrlFormValue("action", "update")
     ajaxUpdate.onSuccess(function (response){
@@ -85,12 +89,17 @@ export function messageAjaxListen(){
     }
 }
 
+// Sets all the required data for the message update form.
 function setUpdMessageData(message: HTMLElement){
     let updMsgId = document.getElementById("updMsgId") as HTMLInputElement;
     updMsgId.value = message.dataset.msgid;
 
     let msgImages = message.querySelector(".chat-content-msg-images");
     let msgImagesData = msgImages.querySelectorAll("span");
+
+    // Setting images in the form.
+    // It displays the image itself with a button to delete it and hidden checkboxes to send deletion data to the server.
+    // Each checkbox name starts with updRmImage. and then the path to the image.
     if (msgImagesData){
         let chatUpdImages = document.getElementById("chat-upd-images");
         chatUpdImages.innerHTML = "";
@@ -120,6 +129,7 @@ function setUpdMessageData(message: HTMLElement){
             }
         }
     }
+    // Set message text.
     let a = document.getElementById("upd-message-text") as HTMLTextAreaElement;
     a.value = message.querySelector(".chat-content-msg-text").innerHTML.trim();
 }

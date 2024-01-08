@@ -37,7 +37,7 @@ func main() {
 		if ok {
 			return func() {}
 		}
-		manager.SetTemplatePath("src/templates/t2/home.html")
+		manager.SetTemplatePath("src/templates/home.html")
 		err := manager.RenderTemplate(w, r)
 		if err != nil {
 			panic(err)
