@@ -27,7 +27,13 @@ type MessageImage struct {
 	Path          string `db:"path"`
 }
 
-func Chat(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
+type Chat struct {
+	Id    string `db:"id"`
+	User1 string `db:"user1"`
+	User2 string `db:"user2"`
+}
+
+func ChatView(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
 	chatId, ok := manager.GetSlugParams("id")
 	if !ok {
 		return func() { router.ServerError(w, "Slug parameter id for chat was not found.") }
@@ -195,4 +201,17 @@ func IncrementChatMsgCountFromDb(r *http.Request, chatId string, sendUid string,
 		return err
 	}
 	return nil
+}
+
+func GetChat(chatId string, db *database.Database) (Chat, error) {
+	chatDb, err := db.SyncQ().QB().Select("*", "chat").Where("id", "=", chatId).Ex()
+	if err != nil {
+		return Chat{}, err
+	}
+	var chat Chat
+	err = dbutils.FillStructFromDb(chatDb[0], &chat)
+	if err != nil {
+		return Chat{}, err
+	}
+	return chat, nil
 }

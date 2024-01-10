@@ -11,14 +11,8 @@ import (
 	"net/http"
 )
 
-type chat struct {
-	Id    string `db:"id"`
-	User1 string `db:"user1"`
-	User2 string `db:"user2"`
-}
-
 type chatInfo struct {
-	Chat     chat
+	Chat     Chat
 	User     profile.UserData
 	LastMsg  ChatMessage
 	MsgCount int
@@ -51,10 +45,10 @@ func ChatList(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 		return func() { router.ServerError(w, err.Error()) }
 	}
 	// Set chat information.
-	var chatsStruct []chat
+	var chatsStruct []Chat
 	var chatsInfo []chatInfo
 	for i := 0; i < len(chats); i++ {
-		var c chat
+		var c Chat
 		err := dbutils.FillStructFromDb(chats[i], &c)
 		if err != nil {
 			return func() { router.ServerError(w, err.Error()) }
@@ -88,7 +82,7 @@ func ChatList(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 }
 
 // getChatListUsers Sets the user information for each instance of the chatInfo structure.
-func getChatListUsers(chats []chat, uid string, _chatInfo *[]chatInfo, db *database.Database) error {
+func getChatListUsers(chats []Chat, uid string, _chatInfo *[]chatInfo, db *database.Database) error {
 	var asyncKeys []string
 	for i := 0; i < len(chats); i++ {
 		var currentChatUserId string
@@ -123,7 +117,7 @@ func getChatListUsers(chats []chat, uid string, _chatInfo *[]chatInfo, db *datab
 
 // setChatLastMsg Sets the last message in the chatInfo structure.
 // For each chat, an asynchronous request is sent to the database to retrieve the last message.
-func setChatLastMsg(chats []chat, _chatInfo *[]chatInfo, db *database.Database) error {
+func setChatLastMsg(chats []Chat, _chatInfo *[]chatInfo, db *database.Database) error {
 	var asyncKeys []string
 	for i := 0; i < len(chats); i++ {
 		db.AsyncQ().AsyncSelect("msg"+chats[i].Id, []string{"*"}, "chat_msg", dbutils.WHOutput{
@@ -153,7 +147,7 @@ func setChatLastMsg(chats []chat, _chatInfo *[]chatInfo, db *database.Database) 
 	return nil
 }
 
-func setMsgCount(uid string, chats []chat, _chatInfo *[]chatInfo, db *database.Database) error {
+func setMsgCount(uid string, chats []Chat, _chatInfo *[]chatInfo, db *database.Database) error {
 	var asyncKeys []string
 	for i := 0; i < len(chats); i++ {
 		db.AsyncQ().AsyncSelect("count"+chats[i].Id, []string{"count"}, "chat_msg_count", dbutils.WHEquals(map[string]interface{}{

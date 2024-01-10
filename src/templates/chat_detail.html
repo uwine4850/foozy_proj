@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block cont %}
+<div class="chat-detail">
+    <div class="chat-detail-user">
+        <div class="cd-user-avatar">
+            {% if user.Avatar %}
+            <img src="/{{ user.Avatar }}">
+            {% else %}
+            <img src="/static/img/default.jpeg">
+            {% endif %}
+        </div>
+        <a href="/prof/{{ user.Id }}" class="cd-username">
+            @{{ user.Username }}
+        </a>
+    </div>
+    <div class="chat-detail-panels">
+        <div class="chat-detail-switch-panels">
+            <button>Images</button>
+            <button>Messages</button>
+        </div>
+    </div>
+    <div class="chat-detail-content">
+        <div id="chat-detail-images" class="chat-detail-images">
+            {% for image in images %}
+                {% if forloop.Last %}
+                <div data-imageId="{{ image.Id }}" class="chat-detail-image last-image">
+                    <img loading="lazy" src="/{{ image.Path }}">
+                </div>
+                {% else %}
+                <div data-imageId="{{ image.Id }}" class="chat-detail-image">
+                    <img loading="lazy" src="/{{ image.Path }}">
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock cont %}

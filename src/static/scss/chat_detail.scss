@@ -1,0 +1,86 @@
+@import "vars";
+
+.chat-detail{
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+}
+
+.chat-detail-user{
+  display: flex;
+  padding: 10px;
+  height: 50px;
+  background-color: #323232;
+  .cd-user-avatar{
+    width: 50px;
+    height: 50px;
+    overflow: hidden;
+    border-radius: 3px;
+    img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+  .cd-username{
+    font-size: 1.2rem;
+    margin-left: 10px;
+    margin-top: auto;
+    text-decoration: none;
+  }
+}
+
+.chat-detail-panels{
+  margin-top: 10px;
+  padding: 10px;
+  .chat-detail-switch-panels{
+    display: flex;
+    justify-content: space-between;
+    button{
+      width: 100%;
+      border: none;
+      outline: none;
+      background-color: #323232;
+      height: 40px;
+      transition: .2s;
+      font-size: 1rem;
+      font-weight: 500;
+      &:hover{
+        cursor: pointer;
+        filter: brightness(90%);
+      }
+    }
+  }
+}
+
+.chat-detail-content{
+  height: 100%;
+  overflow-y: scroll;
+}
+
+.chat-detail-images.chat-detail-images-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  row-gap: 10px;
+  column-gap: 10px;
+}
+
+.chat-detail-images{
+  padding: 10px;
+  display: flex;
+  & > * {
+    margin-right: 10px;
+  }
+  .chat-detail-image{
+    min-width: 100px;
+    max-width: 100px;
+    height: 100px;
+    object-fit: cover;
+    img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+}

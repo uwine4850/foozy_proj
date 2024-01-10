@@ -48,7 +48,7 @@
                 <img src="/static/img/default.jpeg">
             </div>
         {% endif %}
-        <a href="/prof/{{ user.Id }}" class="chat-user-username">@{{ user.Username }}</a>
+        <a href="/chat-detail/{{ chatId }}" class="chat-user-username">@{{ user.Username }}</a>
     </div>
     <div class="chat-content" id="chat-content">
         {% for msg in messages %}
