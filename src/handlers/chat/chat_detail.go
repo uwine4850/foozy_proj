@@ -6,6 +6,7 @@ import (
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router"
+	"github.com/uwine4850/foozy/pkg/router/form"
 	"github.com/uwine4850/foozy_proj/src/conf"
 	"net/http"
 	"strconv"
@@ -91,4 +92,55 @@ func checkPermission(chat Chat, uid string) bool {
 		return false
 	}
 	return true
+}
+
+func SearchMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
+	frm := form.NewForm(r)
+	err := frm.Parse()
+	if err != nil {
+		panic(err)
+	}
+	detailChatId, ok := manager.GetUserContext("detailChatId")
+	if !ok {
+		return func() { sendJson(map[string]interface{}{"error": "Detail Chat id not found."}, w) }
+	}
+	UID, _ := manager.GetUserContext("UID")
+	messageText := frm.Value("message-text")
+
+	db := conf.NewDb()
+	err = db.Connect()
+	if err != nil {
+		panic(err)
+	}
+	defer func(db *database.Database) {
+		err := db.Close()
+		if err != nil {
+			sendJson(map[string]interface{}{"error": err.Error()}, w)
+		}
+	}(db)
+
+	messagesDb, err := db.SyncQ().QB().Select("*", "chat_msg").
+		Where("chat", "=", detailChatId, "AND", "text LIKE \"%"+messageText+"%\" ORDER BY id DESC LIMIT 5").Ex()
+	if err != nil {
+		return func() { sendJson(map[string]interface{}{"error": err.Error()}, w) }
+	}
+
+	var messages []ChatMessage
+	for i := 0; i < len(messagesDb); i++ {
+		var m ChatMessage
+		err := dbutils.FillStructFromDb(messagesDb[i], &m)
+		if err != nil {
+			return func() { sendJson(map[string]interface{}{"error": err.Error()}, w) }
+		}
+		images, err := LoadMessageImages(m.Id, db)
+		if err != nil {
+			return func() { sendJson(map[string]interface{}{"error": err.Error()}, w) }
+		}
+		m.Images = images
+		messages = append(messages, m)
+	}
+
+	return func() {
+		sendJson(map[string]interface{}{"messages": messages, "UID": UID}, w)
+	}
 }

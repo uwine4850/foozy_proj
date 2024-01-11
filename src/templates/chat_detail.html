@@ -16,8 +16,8 @@
     </div>
     <div class="chat-detail-panels">
         <div class="chat-detail-switch-panels">
-            <button>Images</button>
-            <button>Messages</button>
+            <button id="chat-detail-images-btn">Images</button>
+            <button id="chat-detail-messages-btn">Messages</button>
         </div>
     </div>
     <div class="chat-detail-content">
@@ -33,6 +33,19 @@
                 </div>
                 {% endif %}
             {% endfor %}
+        </div>
+        <div id="chat-detail-search" class="chat-detail-search">
+            <form action="/search-messages" id="search-messages" class="search-messages">
+                <div class="search-messages-input-wrap">
+                    <input type="text" name="message-text">
+                    <button type="submit"><a>
+                        <img src="/static/img/2/search.svg" alt="">
+                    </a></button>
+                </div>
+            </form>
+            <div id="chat-content-detail" class="chat-content chat-content-detail">
+
+            </div>
         </div>
     </div>
 </div>

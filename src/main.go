@@ -64,6 +64,7 @@ func main() {
 	newRouter.Post("/message-menu", chatws.MessageMenu)
 	newRouter.Get("/chat-detail/<id>", chat.Detail)
 	newRouter.Get("/load-images", chat.LoadImages)
+	newRouter.Post("/search-messages", chat.SearchMessages)
 	newRouter.GetMux().Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("src/static"))))
 	newRouter.GetMux().Handle("/media/", http.StripPrefix("/media/", http.FileServer(http.Dir("media"))))
 	server := server2.NewServer(":8000", newRouter)

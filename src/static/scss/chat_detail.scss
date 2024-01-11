@@ -66,6 +66,10 @@
   column-gap: 10px;
 }
 
+.chat-detail-images.chat-detail-images-hide{
+  display: none;
+}
+
 .chat-detail-images{
   padding: 10px;
   display: flex;
@@ -83,4 +87,40 @@
       object-fit: cover;
     }
   }
+}
+
+// SEARCH MESSAGES
+
+.chat-detail-search{
+  display: none;
+  flex-direction: column;
+  .search-messages{
+    box-sizing: border-box;
+    padding: 10px;
+    .search-messages-input-wrap{
+      display: flex;
+      width: 100%;
+      input{
+        background-color: $lightGray;
+        width: 100%;
+        outline: none;
+        border: none;
+        border-radius: 5px 0 0 5px;
+        font-size: 1rem;
+        padding: 0 10px;
+      }
+      button{
+        @include defaultButton();
+        background-color: $lightGray;
+        border-radius: 0 5px 5px 0;
+      }
+    }
+  }
+}
+
+.chat-content-detail{
+  width: 100%;
+}
+
+.chat-content-msg.chat-content-msg-detail{
 }

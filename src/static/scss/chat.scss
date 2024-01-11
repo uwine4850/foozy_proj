@@ -244,6 +244,10 @@
   }
 }
 
+.del-msg-content.pop-up-hide{
+  display: none;
+}
+
 .del-msg-content{
   display: flex;
   flex-direction: column;
