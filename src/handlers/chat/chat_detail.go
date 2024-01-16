@@ -102,7 +102,7 @@ func SearchMessages(w http.ResponseWriter, r *http.Request, manager interfaces.I
 	}
 	detailChatId, ok := manager.GetUserContext("detailChatId")
 	if !ok {
-		return func() { sendJson(map[string]interface{}{"error": "Detail Chat id not found."}, w) }
+		return func() { router.SendJson(map[string]interface{}{"error": "Detail Chat id not found."}, w) }
 	}
 	UID, _ := manager.GetUserContext("UID")
 	messageText := frm.Value("message-text")
@@ -115,14 +115,14 @@ func SearchMessages(w http.ResponseWriter, r *http.Request, manager interfaces.I
 	defer func(db *database.Database) {
 		err := db.Close()
 		if err != nil {
-			sendJson(map[string]interface{}{"error": err.Error()}, w)
+			router.SendJson(map[string]interface{}{"error": err.Error()}, w)
 		}
 	}(db)
 
 	messagesDb, err := db.SyncQ().QB().Select("*", "chat_msg").
 		Where("chat", "=", detailChatId, "AND", "text LIKE \"%"+messageText+"%\" ORDER BY id DESC LIMIT 5").Ex()
 	if err != nil {
-		return func() { sendJson(map[string]interface{}{"error": err.Error()}, w) }
+		return func() { router.SendJson(map[string]interface{}{"error": err.Error()}, w) }
 	}
 
 	var messages []ChatMessage
@@ -130,17 +130,17 @@ func SearchMessages(w http.ResponseWriter, r *http.Request, manager interfaces.I
 		var m ChatMessage
 		err := dbutils.FillStructFromDb(messagesDb[i], &m)
 		if err != nil {
-			return func() { sendJson(map[string]interface{}{"error": err.Error()}, w) }
+			return func() { router.SendJson(map[string]interface{}{"error": err.Error()}, w) }
 		}
 		images, err := LoadMessageImages(m.Id, db)
 		if err != nil {
-			return func() { sendJson(map[string]interface{}{"error": err.Error()}, w) }
+			return func() { router.SendJson(map[string]interface{}{"error": err.Error()}, w) }
 		}
 		m.Images = images
 		messages = append(messages, m)
 	}
 
 	return func() {
-		sendJson(map[string]interface{}{"messages": messages, "UID": UID}, w)
+		router.SendJson(map[string]interface{}{"messages": messages, "UID": UID}, w)
 	}
 }

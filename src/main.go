@@ -44,7 +44,7 @@ func main() {
 		}
 		return func() {}
 	})
-	newRouter.Get("/prof/<id>", profile.ProfileView)
+	newRouter.Get("/prof/<id>", profile.InitProfileView())
 	newRouter.Get("/register", profile.Register)
 	newRouter.Post("/register-post", profile.RegisterPost)
 	newRouter.Get("/sign-in", profile.SignIn)

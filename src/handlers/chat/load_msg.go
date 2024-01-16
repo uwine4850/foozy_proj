@@ -1,10 +1,10 @@
 package chat
 
 import (
-	"encoding/json"
 	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
+	"github.com/uwine4850/foozy/pkg/router"
 	"github.com/uwine4850/foozy_proj/src/conf"
 	"net/http"
 	"strconv"
@@ -18,18 +18,18 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 	handler := r.URL.Query().Get("handler")
 	uid, err := r.Cookie("UID")
 	if err != nil {
-		return func() { sendJson(map[string]string{"err": err.Error()}, w) }
+		return func() { router.SendJson(map[string]string{"err": err.Error()}, w) }
 	}
 
 	db := conf.NewDb()
 	err = db.Connect()
 	if err != nil {
-		return func() { sendJson(map[string]string{"err": err.Error()}, w) }
+		return func() { router.SendJson(map[string]string{"err": err.Error()}, w) }
 	}
 	defer func(db *database.Database) {
 		err := db.Close()
 		if err != nil {
-			sendJson(map[string]string{"err": err.Error()}, w)
+			router.SendJson(map[string]string{"err": err.Error()}, w)
 		}
 	}(db)
 
@@ -39,10 +39,10 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		QueryArgs: []interface{}{chatId, uid.Value, uid.Value},
 	}, 1)
 	if err != nil {
-		return func() { sendJson(map[string]string{"err": err.Error()}, w) }
+		return func() { router.SendJson(map[string]string{"err": err.Error()}, w) }
 	}
 	if chat == nil {
-		return func() { sendJson(map[string]string{"err": "Permission dined"}, w) }
+		return func() { router.SendJson(map[string]string{"err": "Permission dined"}, w) }
 	}
 
 	// If this is the first message the message type will be equal to the message type.
@@ -57,14 +57,14 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		_messages, err := db.SyncQ().Query("SELECT * FROM `chat_msg` WHERE chat = ? AND id < ? "+
 			"ORDER BY id DESC LIMIT "+strconv.Itoa(conf.LoadMessages), chatId, msgId)
 		if err != nil {
-			return func() { sendJson(map[string]string{"err": err.Error()}, w) }
+			return func() { router.SendJson(map[string]string{"err": err.Error()}, w) }
 		}
 		messages = _messages
 	case "notread":
 		_messages, err := db.SyncQ().Query("SELECT * FROM `chat_msg` WHERE chat = ? AND id > ? "+
 			" LIMIT "+strconv.Itoa(conf.LoadMessages), chatId, msgId)
 		if err != nil {
-			return func() { sendJson(map[string]string{"err": err.Error()}, w) }
+			return func() { router.SendJson(map[string]string{"err": err.Error()}, w) }
 		}
 		messages = _messages
 	}
@@ -74,28 +74,15 @@ func LoadMessages(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		var m ChatMessage
 		err := dbutils.FillStructFromDb(messages[i], &m)
 		if err != nil {
-			return func() { sendJson(map[string]string{"err": err.Error()}, w) }
+			return func() { router.SendJson(map[string]string{"err": err.Error()}, w) }
 		}
 		images, err := LoadMessageImages(m.Id, db)
 		if err != nil {
-			return func() { sendJson(map[string]string{"err": err.Error()}, w) }
+			return func() { router.SendJson(map[string]string{"err": err.Error()}, w) }
 		}
 		m.Images = images
 		chatMessages = append(chatMessages, m)
 	}
-	sendJson(map[string]interface{}{"messages": chatMessages, "chatId": chatId, "uid": uid.Value, "type": _type, "first": first}, w)
+	_ = router.SendJson(map[string]interface{}{"messages": chatMessages, "chatId": chatId, "uid": uid.Value, "type": _type, "first": first}, w)
 	return func() {}
-}
-
-func sendJson(data interface{}, w http.ResponseWriter) {
-	marshal, err := json.Marshal(data)
-	if err != nil {
-		panic(err)
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(marshal)
-	if err != nil {
-		panic(err)
-	}
 }

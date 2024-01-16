@@ -5,6 +5,7 @@ import (
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router"
+	"github.com/uwine4850/foozy/pkg/router/object"
 	"github.com/uwine4850/foozy_proj/src/conf"
 	"net/http"
 )
@@ -17,51 +18,25 @@ type UserData struct {
 	Description string `db:"description"`
 }
 
-func ProfileView(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
+type ProfView struct {
+	object.ObjView
+}
+
+func (v *ProfView) Context(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) map[string]interface{} {
 	id, _ := manager.GetSlugParams("id")
+	UID, _ := manager.GetUserContext("UID")
 	db := conf.NewDb()
 	err := db.Connect()
 	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
+		router.ServerError(w, err.Error())
+		return map[string]interface{}{}
 	}
-	defer func(DatabaseI *database.Database) {
-		err := DatabaseI.Close()
-		if err != nil {
-			router.ServerError(w, err.Error())
-		}
-	}(db)
-	user, err := db.SyncQ().Select([]string{"*"}, "auth", dbutils.WHEquals(map[string]interface{}{"id": id}, "AND"), 1)
-	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
-	}
-
-	// Render 404 if user not found
-	if user == nil {
-		w.WriteHeader(http.StatusNotFound)
-		_, err := w.Write([]byte("User not found"))
-		if err != nil {
-			return func() { router.ServerError(w, err.Error()) }
-		}
-		return func() {}
-	}
-	manager.SetUserContext("subscribe_user_id", id)
-	var fillUserData UserData
-	err = dbutils.FillStructFromDb(user[0], &fillUserData)
-	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
-	}
-	UID, _ := manager.GetUserContext("UID")
 	isChatExist, err := chatExist(id, UID, db)
 	if err != nil {
-		return func() { router.ServerError(w, err.Error()) }
+		router.ServerError(w, err.Error())
+		return map[string]interface{}{}
 	}
-	manager.SetTemplatePath("src/templates/profile.html")
-	manager.SetContext(map[string]interface{}{"user": fillUserData, "isChatExist": isChatExist})
-	err = manager.RenderTemplate(w, r)
-	if err != nil {
-		panic(err)
-	}
-	return func() {}
+	return map[string]interface{}{"isChatExist": isChatExist}
 }
 
 func chatExist(id any, uid any, db *database.Database) (int, error) {
@@ -80,6 +55,19 @@ func chatExist(id any, uid any, db *database.Database) (int, error) {
 		return -1, err
 	}
 	return parseInt, nil
+}
+
+func InitProfileView() func(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
+	view := object.ObjView{
+		UserView:     &ProfView{},
+		Name:         "user",
+		TemplatePath: "src/templates/profile.html",
+		DB:           conf.NewDb(),
+		TableName:    "auth",
+		FillStruct:   UserData{},
+		Slug:         "id",
+	}
+	return view.Call
 }
 
 func GetUserDataById(id string, db *database.Database) (*UserData, error) {

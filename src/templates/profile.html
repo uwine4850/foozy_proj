@@ -19,9 +19,9 @@
 </div>
 <div class="profile-wrap">
     <div class="profile-left-side">
-        {% if user.Avatar %}
+        {% if user.F("avatar") %}
         <div class="profile-avatar">
-            <img src="/{{ user.Avatar }}" alt="">
+            <img src="/{{ user.F("avatar") }}" alt="">
         </div>
         {% else %}
         <div class="profile-avatar">
@@ -30,14 +30,14 @@
         {% endif %}
         <div class="profile-username">
             <div class="pu-name">
-                {{ user.Name }}
+                {{ user.F("name") }}
             </div>
             <div class="pu-username">
-                @{{ user.Username }}
+                @{{ user.F("username") }}
             </div>
         </div>
         <div class="profile-buttons">
-            {% if user.Id == UID %}
+            {% if user.F("id") == UID %}
             <button class="profile-button-edit">
                 <a href="/profile/{{ UID }}/edit">
                     <img src="/static/img/edit.svg">
@@ -53,9 +53,9 @@
             </button>
             {% endif %}
         </div>
-        {% if user.Description %}
+        {% if user.F("description") %}
         <div class="profile-description">
-            {{ user.Description }}
+            {{ user.F("description") }}
         </div>
         {% endif %}
     </div>
@@ -67,8 +67,6 @@
             window.location.href = "http://localhost:8000/chat/" + id
         } else {
             document.getElementById("pop-up-activate-new-chat").click();
-            // document.getElementById("pop-up-panel-bg-new-chat").classList.toggle("hide-pop-up-panel-bg-new-chat");
-            // document.getElementById("new-msg-form").classList.toggle("new-msg-form-hidden");
         }
     }
 </script>
