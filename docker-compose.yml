@@ -14,9 +14,9 @@ services:
     container_name: "mysql"
     image: mysql:5.7
     restart: always
-    command: --port=3406 --max_connections=10
+    command: --port=3407 --max_connections=10
     ports:
-      - "3406:3406"
+      - "3407:3406"
     environment:
       MYSQL_ROOT_PASSWORD: 1111
     volumes:
@@ -30,7 +30,7 @@ services:
       - "8090:80"
     environment:
       PMA_HOST: mysql
-      PMA_PORT: 3406
+      PMA_PORT: 3407
 
   node:
     build:

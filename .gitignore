@@ -1,7 +1,7 @@
-go.mod
 go.sum
 src/node_modules
 mysql
 src/package-lock.json
 src/static/img/temp
 media
+.idea

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/uwine4850/foozy/pkg/builtin/builtin_mddl"
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/middlewares"
@@ -15,7 +17,6 @@ import (
 	"github.com/uwine4850/foozy_proj/src/middlewares/chatmddl"
 	"github.com/uwine4850/foozy_proj/src/middlewares/notificationmddl"
 	"github.com/uwine4850/foozy_proj/src/middlewares/profilemddl"
-	"net/http"
 )
 
 func main() {

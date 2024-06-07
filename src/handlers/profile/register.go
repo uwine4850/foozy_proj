@@ -2,6 +2,8 @@ package profile
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/uwine4850/foozy/pkg/builtin/auth"
 	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
@@ -10,7 +12,6 @@ import (
 	"github.com/uwine4850/foozy/pkg/router/form"
 	"github.com/uwine4850/foozy_proj/src/conf"
 	"github.com/uwine4850/foozy_proj/src/utils"
-	"net/http"
 )
 
 func Register(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
@@ -59,10 +60,7 @@ func RegisterPost(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 			utils.ServerError(w, err.Error())
 		}
 	}(db)
-	newAuth, err := auth.NewAuth(db)
-	if err != nil {
-		return func() { router.RedirectError(w, r, "/register", err.Error(), manager) }
-	}
+	newAuth := auth.NewAuth(db)
 
 	// Register new user.
 	err = newAuth.RegisterUser(registerForm.Username[0], registerForm.Password[0])
@@ -78,7 +76,7 @@ func RegisterPost(w http.ResponseWriter, r *http.Request, manager interfaces.IMa
 		if err != nil {
 			return func() { router.RedirectError(w, r, "/register", err.Error(), manager) }
 		}
-		_, err = db.SyncQ().Update("auth", []dbutils.DbEquals{{"name", registerForm.Name[0]}},
+		_, err = db.SyncQ().Update("auth", []dbutils.DbEquals{{Name: "name", Value: registerForm.Name[0]}},
 			dbutils.WHEquals(map[string]interface{}{"id": id}, "AND"))
 		if err != nil {
 			return func() { router.RedirectError(w, r, "/register", err.Error(), manager) }

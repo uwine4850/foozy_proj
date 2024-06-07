@@ -19,9 +19,9 @@
 </div>
 <div class="profile-wrap">
     <div class="profile-left-side">
-        {% if user.F("avatar") %}
+        {% if user.Avatar %}
         <div class="profile-avatar">
-            <img src="/{{ user.F("avatar") }}" alt="">
+            <img src="/{{ user.Avatar }}" alt="">
         </div>
         {% else %}
         <div class="profile-avatar">
@@ -30,10 +30,10 @@
         {% endif %}
         <div class="profile-username">
             <div class="pu-name">
-                {{ user.F("name") }}
+                {{ user.Name }}
             </div>
             <div class="pu-username">
-                @{{ user.F("username") }}
+                @{{ user.Username }}
             </div>
         </div>
         <div class="profile-buttons">

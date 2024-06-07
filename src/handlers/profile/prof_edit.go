@@ -120,8 +120,8 @@ func ProfileEditPost(w http.ResponseWriter, r *http.Request, manager interfaces.
 		}
 	}(db)
 	updSlice := []dbutils.DbEquals{
-		{"name", fillableProfileForm.GetOrDef("Name", 0)},
-		{"description", fillableProfileForm.GetOrDef("Description", 0)},
+		{Name: "name", Value: fillableProfileForm.GetOrDef("Name", 0)},
+		{Name: "description", Value: fillableProfileForm.GetOrDef("Description", 0)},
 	}
 	// Delete avatar
 	user, err := db.SyncQ().Select([]string{"*"}, "auth", dbutils.WHEquals(map[string]interface{}{

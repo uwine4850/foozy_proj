@@ -1,12 +1,14 @@
 package profilemddl
 
 import (
+	"net/http"
+
 	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/middlewares"
+	"github.com/uwine4850/foozy_proj/src/conf"
 	"github.com/uwine4850/foozy_proj/src/handlers/profile"
-	"net/http"
 )
 
 func AuthMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManagerData) {
@@ -20,7 +22,7 @@ func AuthMddl(w http.ResponseWriter, r *http.Request, manager interfaces.IManage
 			return
 		}
 		// Connect to database.
-		db := database.NewDatabase("root", "1111", "mysql", "3406", "foozy_proj")
+		db := conf.NewDb()
 		err = db.Connect()
 		if err != nil {
 			middlewares.SetMddlError(err, manager)

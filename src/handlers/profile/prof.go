@@ -1,13 +1,14 @@
 package profile
 
 import (
+	"net/http"
+
 	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
 	"github.com/uwine4850/foozy/pkg/interfaces"
 	"github.com/uwine4850/foozy/pkg/router"
 	"github.com/uwine4850/foozy/pkg/router/object"
 	"github.com/uwine4850/foozy_proj/src/conf"
-	"net/http"
 )
 
 type UserData struct {
@@ -36,6 +37,7 @@ func (v *ProfView) Context(w http.ResponseWriter, r *http.Request, manager inter
 		router.ServerError(w, err.Error())
 		return map[string]interface{}{}
 	}
+	defer db.Close()
 	return map[string]interface{}{"isChatExist": isChatExist}
 }
 
@@ -58,14 +60,17 @@ func chatExist(id any, uid any, db *database.Database) (int, error) {
 }
 
 func InitProfileView() func(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
-	view := object.ObjView{
-		UserView:     &ProfView{},
-		Name:         "user",
+	view := object.TemplateView{
 		TemplatePath: "src/templates/profile.html",
-		DB:           conf.NewDb(),
-		TableName:    "auth",
-		FillStruct:   UserData{},
-		Slug:         "id",
+		View: &ProfView{
+			object.ObjView{
+				Name:       "user",
+				DB:         conf.NewDb(),
+				TableName:  "auth",
+				FillStruct: UserData{},
+				Slug:       "id",
+			},
+		},
 	}
 	return view.Call
 }

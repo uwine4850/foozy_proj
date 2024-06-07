@@ -1,6 +1,9 @@
 package profile
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/uwine4850/foozy/pkg/builtin/auth"
 	"github.com/uwine4850/foozy/pkg/database"
 	"github.com/uwine4850/foozy/pkg/database/dbutils"
@@ -9,8 +12,6 @@ import (
 	"github.com/uwine4850/foozy/pkg/router/form"
 	"github.com/uwine4850/foozy_proj/src/conf"
 	"github.com/uwine4850/foozy_proj/src/utils"
-	"net/http"
-	"strconv"
 )
 
 func SignIn(w http.ResponseWriter, r *http.Request, manager interfaces.IManager) func() {
@@ -57,7 +58,7 @@ func SignInPost(w http.ResponseWriter, r *http.Request, manager interfaces.IMana
 	}(db)
 
 	// New auth.
-	newAuth, err := auth.NewAuth(db)
+	newAuth := auth.NewAuth(db)
 	if err != nil {
 		return func() { router.RedirectError(w, r, "/sign-in", err.Error(), manager) }
 	}
